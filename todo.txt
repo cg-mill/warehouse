@@ -1,0 +1,17 @@
+GUI *********
+receiving automation / form filling
+    send to receiving/seed cleaning loss log (make new xlsx)
+    send to gohaccp
+    make button for generating eom inventory
+
+set gohaccp info, store to json
+
+make end of year report for seed cleaning/receiving loss
+
+
+new varieties (all one screen)
+    set index (done)
+    set font info
+    ?
+snapshots of current inventory
+comparing dates
