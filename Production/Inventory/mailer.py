@@ -20,7 +20,7 @@ class Mailer:
             self, 
             inventory:'WarehouseGrainInventory',
             send_from:str,
-            send_to:str
+            send_to:list[str]
             ) -> None:
         self.sender = send_from
         self.send_to = send_to
@@ -31,7 +31,7 @@ class Mailer:
         self.message = MIMEMultipart()
         self.message["Subject"] = f'{SUBJECT} | {self.inventory.time}'
         self.message["From"] = self.sender
-        self.message["To"] = self.send_to
+        self.message["To"] = ', '.join(self.send_to)
 
         self.html = f"""\
         <html>
@@ -116,14 +116,15 @@ class Mailer:
         with smtplib.SMTP('smtp.gmail.com', port=587) as connetion:
             connetion.starttls()
             connetion.login(user=self.sender, password=APP_PASS)
-            connetion.sendmail(
-                from_addr=self.sender,
-                to_addrs=self.send_to,
-                msg=self.message.as_string()
-            )
-        print(f'Message Sent To --- {self.send_to}')
+            for person in self.send_to:
+                connetion.sendmail(
+                    from_addr=self.sender,
+                    to_addrs=person,
+                    msg=self.message.as_string()
+                )
+                print(f'Message Sent To --- {person}')
     
-    
+
     def get_previous_date(self):
         if len(self.inventory.prev_history) > 0:
             for key in self.inventory.prev_history:
