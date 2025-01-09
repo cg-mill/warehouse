@@ -1,6 +1,4 @@
 from datetime import datetime
-# from email.mime.message import MIMEMessage
-# from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
@@ -8,11 +6,9 @@ import os
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    # from inventory_obj import WarehouseGrainInventory, GrainVariety
     from Inventory import WarehouseGrainInventory, GrainVariety
 
 SUBJECT = 'Working Inventory Update'
-APP_PASS = os.environ.get('EMAIL_APP_PASS')
 
 
 class Mailer:
@@ -20,10 +16,12 @@ class Mailer:
             self, 
             inventory:'WarehouseGrainInventory',
             send_from:str,
+            app_pass:str,
             send_to:list[str]
             ) -> None:
         self.sender = send_from
-        self.send_to = send_to
+        self.app_pass = app_pass
+        self.send_to = ', '.join(send_to)
         self.inventory = inventory
 
         self.main_grain_types = ['Wheat', 'Rye', 'Corn']
@@ -31,7 +29,7 @@ class Mailer:
         self.message = MIMEMultipart()
         self.message["Subject"] = f'{SUBJECT} | {self.inventory.time}'
         self.message["From"] = self.sender
-        self.message["To"] = ', '.join(self.send_to)
+        self.message["To"] = self.send_to
 
         self.html = f"""\
         <html>
@@ -113,16 +111,16 @@ class Mailer:
 
     
     def send_mail(self):
-        with smtplib.SMTP('smtp.gmail.com', port=587) as connetion:
-            connetion.starttls()
-            connetion.login(user=self.sender, password=APP_PASS)
-            for person in self.send_to:
-                connetion.sendmail(
-                    from_addr=self.sender,
-                    to_addrs=person,
-                    msg=self.message.as_string()
-                )
-                print(f'Message Sent To --- {person}')
+        with smtplib.SMTP('smtp.gmail.com', port=587) as connection:
+            connection.starttls()
+            connection.login(user=self.sender, password=self.app_pass)
+            connection.sendmail(
+                from_addr=self.sender,
+                to_addrs=self.send_to,
+                msg=self.message.as_string()
+
+            )
+            print(f'Message Sent To --- {self.send_to}')
     
 
     def get_previous_date(self):
@@ -149,11 +147,7 @@ class Mailer:
                 return difference
         else:
             return difference
-        
-    def attach_eom_inventory(self):
-        pass #TODO
-
-    
+ 
 
 ###################### For List of All Previous Inventories ##################################
     # def get_previous_date(self):
