@@ -4,8 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 import time
 from datetime import datetime
-import os
-import sys
+import json
 
 from Inventory import Crop
 
@@ -14,9 +13,12 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_experimental_option("detach", True)
 chrome_options.add_argument('--window-size=1000,750')
 
-URL = os.environ.get('GOHACCP_URL')
-USERNAME = os.environ.get('GOHACCP_EMAIL')
-PASSWORD = os.environ.get('GOHACCP_PASS')
+with open('Production/gohaccp.json') as f:
+    login_data = json.load(f)
+
+URL = login_data['url']
+USERNAME = login_data['username']
+PASSWORD = login_data['password']
 INITIALS = 'CG'
 
 
@@ -39,14 +41,18 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         inputs[1].send_keys(self.password)
         login_button = self.driver.find_element(By.XPATH, value='//*[@id="root"]/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div/div[1]/div[1]/div[3]/div')
         login_button.click()
-        time.sleep(5) 
+        # time.sleep(5) #FIXME delete sleeps if 
         # TODO implement nosuchelement exeption in loops to speed up sleep times
 
 
     def new_report(self):
-
-        self.new_report_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "New Reports")]')
-        
+        found = False
+        while not found:
+            try:
+                self.new_report_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "New Reports")]')
+                found = True
+            except NoSuchElementException:
+                time.sleep(0.5)
         self.new_report_button.click()
         time.sleep(8)
 

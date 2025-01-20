@@ -16,7 +16,7 @@ from gui import TimeInput, MoistureProteinInput, NewVarietyIndexWindow
 
 
 class ReceivingWindow(ctk.CTkToplevel):
-    def __init__(self, data:pd.DataFrame, inv_path, receiving_path, tote_label_path, *args, **kwargs):
+    def __init__(self, data:pd.DataFrame, inv_path, receiving_path, tote_label_path, loss_log_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.geometry('650x650')
         self.title("Receiving Form")
@@ -26,6 +26,7 @@ class ReceivingWindow(ctk.CTkToplevel):
             inv_path=inv_path,
             receiving_path=receiving_path,
             tote_label_path=tote_label_path,
+            loss_log_path=loss_log_path,
             width=650,
             height=650
             )
@@ -36,13 +37,14 @@ class ReceivingWindow(ctk.CTkToplevel):
         
 
 class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
-    def __init__(self, data:pd.DataFrame, master, inv_path, receiving_path, tote_label_path, **kwargs):
+    def __init__(self, data:pd.DataFrame, master, inv_path, receiving_path, tote_label_path, loss_log_path, **kwargs):
         super().__init__(master, **kwargs)
         self.data = data
         self.master = master
         self.inv_path = inv_path
         self.receiving_path = receiving_path
         self.tote_label_path = tote_label_path
+        self.loss_log_path = loss_log_path
 
         self.date_label = ctk.CTkLabel(master=self, text='Date Received (yyyy-mm-dd)', justify='right', anchor='e')
         self.date_label.grid(row=0, column=0, padx=10, pady=5)
@@ -385,7 +387,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             return None
         
 
-    def write_to_receiving(self, crop:Crop) -> str: #FIXME ?
+    def write_to_receiving(self, crop:Crop) -> str: #FIXME single variety ie Buckwheat will write Buckwheat, Buckwheat. Other issues? Needs further testing
         alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         try:
             date_to_write = f'{crop.date_received.month}.{crop.date_received.day}.{crop.date_received.year}/'
@@ -440,6 +442,18 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
     def write_to_gohaacp() -> str:
         pass #TODO
+
+
+    def write_to_loss_log(self, crop:Crop) -> str:
+        try:
+            wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)
+            ws = wb['Log']
+            dv = DataValidation(type='list', formula1='"Wheat, Rye, Corn, Rice, Beans, Buckwheat"')
+            ws.add_data_validation(dv)
+        
+        except Exception as e:
+            return f'❌ Write to Loss Log Failed \n{e}\n'
+        #TODO Finish
 
 
     def write_to_inventory(self, crop:Crop) -> str:

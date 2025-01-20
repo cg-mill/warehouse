@@ -68,7 +68,8 @@ class HomeSideBar(ctk.CTkFrame):
                 data=self.data,
                 inv_path=self.master.inv_path,
                 receiving_path=self.master.receiving_path,
-                tote_label_path=self.master.tote_label_path
+                tote_label_path=self.master.tote_label_path,
+                loss_log_path=self.master.loss_log_path
                 )
         
             # self.error_label.bind(self.receiving_window.status_var) #FIXME
