@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import json
 from datetime import datetime, timedelta
+from pathlib import Path
 # import xlsxwriter as xl
 # from decimal import * #TODO read docs, implement
 
@@ -10,8 +11,8 @@ from datetime import datetime, timedelta
 ENCODING = 'utf-8'
 PREV_HIST_PATH = 'Production/Inventory/data/eom/prev_his.json'
 ALL_HIST_PATH = 'Production/Inventory/data/eom/total_history.json'
-EXCEL_SAVE_TO_PATH = f"{os.environ['USERPROFILE']}/Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs"
-
+# EXCEL_SAVE_TO_PATH = f"{os.environ['USERPROFILE']}/Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs"
+EXCEL_SAVE_TO_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
 
 class EOMGrainVariety:
     def __init__(self, variety:str, cog:float) -> None:
@@ -27,8 +28,11 @@ class EOMGrainVariety:
 #TODO changes from previous? 
 #TODO mailer
 class EOMWarehouseInventory:
-    def __init__(self, data: pd.DataFrame) -> None:
-        self.eom_time:datetime = self.get_eom_date()
+    def __init__(self, data: pd.DataFrame, time:datetime.date = None) -> None:
+        if time:
+            self.eom_time = time
+        else:
+            self.eom_time:datetime = self.get_eom_date()
         self.data = data
         self.varieties:list[tuple] = self.get_all_cogs_varieties()
         self.all_inventory:list[EOMGrainVariety] = self.get_all_inventory()
@@ -93,7 +97,9 @@ class EOMWarehouseInventory:
 
     def save_to_xlsx(self):
         file_name = f'{self.eom_time} EOM Inventory.xlsx'
-        full_file_path = f'{EXCEL_SAVE_TO_PATH}/{self.eom_time.year}/{file_name}'
+        full_file_path = EXCEL_SAVE_TO_PATH.joinpath(str(self.eom_time.year), file_name)
+        if full_file_path.parent not in full_file_path.parent.parent.iterdir():
+            full_file_path.parent.mkdir(parents=True, exist_ok=True)
         sheet_name = f'Inventory {self.eom_time}'
         info_dict = {
             'Variety': [var.variety for var in self.all_inventory],
@@ -171,17 +177,17 @@ if __name__ == "__main__":
     INVENTORY_PATH = f"{os.environ['USERPROFILE']}/Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm" # FOR WORK
 
     data = pd.read_excel(
-    INVENTORY_PATH, 
-    index_col=False,
-    sheet_name='All',
-    usecols='A:N,P,Q',
-    engine='openpyxl',
-    # parse_dates=['Date Received','Clean Date']#,'MAP Date', 'Kill Date']
-    )
+        INVENTORY_PATH, 
+        index_col=False,
+        sheet_name='All',
+        usecols='A:N,P,Q',
+        engine='openpyxl',
+        # parse_dates=['Date Received','Clean Date']#,'MAP Date', 'Kill Date']
+        )
     data.dropna(subset=['Tote #'], inplace=True)
 
     eom = EOMWarehouseInventory(data=data)
 
-    eom.save_prev_json()
-    eom.save_to_history_json()
+    # eom.save_prev_json()
+    # eom.save_to_history_json()
     eom.save_to_xlsx()

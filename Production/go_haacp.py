@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 import time
 from datetime import datetime
 import json
@@ -31,12 +31,15 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
 
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get(url=URL)
-        time.sleep(4)
+        # time.sleep(4)
         self.login()
 
 
     def login(self):
-        inputs = self.driver.find_elements(By.TAG_NAME, value='input')
+        inputs = []
+        while inputs == []:
+            inputs = self.driver.find_elements(By.TAG_NAME, value='input')
+            time.sleep(0.5)
         inputs[0].send_keys(self.username)
         inputs[1].send_keys(self.password)
         login_button = self.driver.find_element(By.XPATH, value='//*[@id="root"]/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div/div[1]/div[1]/div[3]/div')
@@ -51,6 +54,7 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
             try:
                 self.new_report_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "New Reports")]')
                 found = True
+                time.sleep(0.5)
             except NoSuchElementException:
                 time.sleep(0.5)
         self.new_report_button.click()

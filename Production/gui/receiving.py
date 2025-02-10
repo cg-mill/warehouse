@@ -161,6 +161,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.unclean_button.grid(row=19, column=2, pady=5)
         self.unclean_button.select()
 
+        #TODO add entry for receiving loss
+
         self.received_by_label = ctk.CTkLabel(master=self, text='Received By')
         self.received_by_label.grid(row=20, column=0, pady=5)
         self.received_by_input = ctk.CTkEntry(master=self, placeholder_text='Initials')
@@ -448,9 +450,36 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         try:
             wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)
             ws = wb['Log']
-            dv = DataValidation(type='list', formula1='"Wheat, Rye, Corn, Rice, Beans, Buckwheat"')
-            ws.add_data_validation(dv)
-        
+            grain_dv = DataValidation(type='list', formula1='"Wheat, Rye, Corn, Rice, Beans, Buckwheat"')
+            ws.add_data_validation(grain_dv)
+            org_dv = DataValidation(type='list', formula1='"ORGANIC, NOT ORGANIC"')
+            ws.add_data_validation(org_dv)
+            for row in range(1, ws.max_row):
+                if ws.cell(row, 2).value == None:
+                    row_to_write = row
+                    break
+            grain_dv.add(f'A2:A{row_to_write}')
+            org_dv.add(f'F2:F{row_to_write}')
+            if crop.is_org:
+                org_status = 'ORGANIC'
+            else:
+                org_status = 'NOT ORGANIC'
+            crop_data = {
+                1: crop.grain_type,
+                2: crop.variety,
+                3: crop.crop_id,
+                4: crop.date_received.strftime("%m%d%Y"),
+                5: crop.supplier,
+                6: org_status,
+                7: crop.total_weight,
+                # 8: TODO add receiving loss?
+            }
+            if crop.is_clean:
+                crop_data.update({
+                    9: 0,
+                    10: crop.total_weight,
+                    13: 0
+                })
         except Exception as e:
             return f'❌ Write to Loss Log Failed \n{e}\n'
         #TODO Finish
@@ -523,7 +552,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 lm.make_label(tote=tote, path=full_path)
             return f'✅ Make Labels Successful\nSaved to "{self.tote_label_path}"'
         except Exception as e:
-            return f'❌ Make Labels Failed {e}'
+            return f'❌ Make Labels Failed:\n{e}\n'
 
 
     def make_doc_directory(self) -> str:

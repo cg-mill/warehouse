@@ -23,6 +23,7 @@ class GrainVariety:
         self.seed_stock_weight:int = 0 
         self.total_weight:int = 0
 
+
     def __repr__(self):
         return f'<GrainVariety> "{self.type}, {self.variety}"'
 
