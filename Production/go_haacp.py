@@ -111,14 +111,14 @@ class EODChecklist(GoHAACP):
         time.sleep(1)
         start.click()
         time.sleep(3)
-        initail_inputs = self.driver.find_element(By.TAG_NAME, value='textarea')
+        initail_input = self.driver.find_element(By.TAG_NAME, value='textarea')
         checkboxes = self.driver.find_elements(By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
         for i in range(1,21):
             if i > 5:
                 self.driver.execute_script("arguments[0].scrollIntoView();", checkboxes[i])
             time.sleep(0.25)
             checkboxes[i].click()
-        initail_inputs.send_keys(self.initials)
+        initail_input.send_keys(self.initials)
 
         self.submit_report()
         print('Warehouse Checklist Complete')

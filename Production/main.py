@@ -24,11 +24,11 @@ from gui import (
 
 
 INVENTORY_PATH = 'TESTING FILES/Warehouse Inventory.xlsm' # FOR HOME / TESTING
-# INVENTORY_PATH = Path(Path().home(), '/Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm')
+# INVENTORY_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm')
 RECEIVING_PATH = 'TESTING FILES/The Receiving Log - 2022 to Current.xlsx' # temp path
 # RECEIVING_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/Receiving/The Receiving Log - 2022 to Current.xlsx')
-LOSS_LOG_PATH = 'TESTING FILES/Receiving - Cleaning Loss.xlsx'
-# LOSS_LOG_PATH = Path(Path().home(), '/Team BSM Dropbox/Warehouse/Receiving - Cleaning Loss.xlsx')
+LOSS_LOG_PATH = 'TESTING FILES/Waste Log.xlsx'
+# LOSS_LOG_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
 TOTE_LABEL_SAVE_PATH = Path(Path().home(), "Desktop") # temp path
 
 
@@ -44,6 +44,7 @@ class App(ctk.CTk):
         
         self.geometry('900x550')
         self.title('Warehouse Operations')
+        
         # self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)

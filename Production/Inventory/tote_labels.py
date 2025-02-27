@@ -50,7 +50,7 @@ class LabelMaker: #TODO print docs
         pass#TODO
     
 
-    def make_label(self, tote:'Tote', path):
+    def make_label(self, tote:'Tote', path:Path):
         FONT_NAME = 'Calibri (Body)'
         LG_FONT = Pt(72)
         SM_FONT = Pt(37)

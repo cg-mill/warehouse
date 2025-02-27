@@ -30,7 +30,6 @@ class ReceivingWindow(ctk.CTkToplevel):
             width=650,
             height=650
             )
-        # self.status_var = ctk.StringVar(master=self, value='') #FIXME
         self.view.pack()
         self.grab_set()
         # self.transient()
@@ -161,32 +160,36 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.unclean_button.grid(row=19, column=2, pady=5)
         self.unclean_button.select()
 
-        #TODO add entry for receiving loss
+        self.receiving_loss_label = ctk.CTkLabel(master=self, text='Receiving Loss (lbs)')
+        self.receiving_loss_label.grid(row=20, column=0, pady=5)
+        self.receiving_loss_input = ctk.CTkEntry(master=self, placeholder_text='0')
+        self.receiving_loss_input.grid(row=20, column=1, pady=5)
 
         self.received_by_label = ctk.CTkLabel(master=self, text='Received By')
-        self.received_by_label.grid(row=20, column=0, pady=5)
+        self.received_by_label.grid(row=21, column=0, pady=5)
         self.received_by_input = ctk.CTkEntry(master=self, placeholder_text='Initials')
-        self.received_by_input.grid(row=20, column=1, pady=5)
+        self.received_by_input.grid(row=21, column=1, pady=5)
 
         self.to_inv_xl_check = ctk.CTkCheckBox(master=self, text='Write to Warehouse Inventory')
-        self.to_inv_xl_check.grid(row=21, column=0, pady=5, sticky='W')
+        self.to_inv_xl_check.grid(row=22, column=0, pady=5, sticky='W')
         self.to_rec_log_check = ctk.CTkCheckBox(master=self, text='Write to Receiving Log')
-        self.to_rec_log_check.grid(row=22, column=0, pady=5, sticky='W')
+        self.to_rec_log_check.grid(row=23, column=0, pady=5, sticky='W')
         self.to_gohaacp_check = ctk.CTkCheckBox(master=self, text='Fill GoHAACP Form')
-        self.to_gohaacp_check.grid(row=23, column=0, pady=5, sticky='W')
-        self.make_labels_check = ctk.CTkCheckBox(master=self, text='Make and Print Tote Labels')
-        self.make_labels_check.grid(row=24, column=0, pady=5, sticky='W')
+        self.to_gohaacp_check.grid(row=24, column=0, pady=5, sticky='W')
+        self.make_labels_check = ctk.CTkCheckBox(master=self, text='Make Tote Labels')
+        self.make_labels_check.grid(row=25, column=0, pady=5, sticky='W')
+        self.print_labels_check = ctk.CTkCheckBox(master=self, text='Print Tote Labels')
+        self.print_labels_check.grid(row=26, column=0, pady=5, sticky='W')
         self.doc_directory_check = ctk.CTkCheckBox(master=self, text='Make Directory for Receiving Documents')
-        self.doc_directory_check.grid(row=25, column=0, pady=5, sticky='W')
-        #TODO write to receiving loss log
-        #TODO add separate check for printing labels
+        self.doc_directory_check.grid(row=27, column=0, pady=5, sticky='W')
+
 
         self.submit_button = ctk.CTkButton(master=self, text='Submit', command=self.handle_submit)
-        self.submit_button.grid(row=26, column=0, pady=50)
+        self.submit_button.grid(row=28, column=0, pady=50)
         self.save_button = ctk.CTkButton(master=self, text='Save', command=self.handle_save)
-        self.save_button.grid(row=26, column=1, pady=50)
+        self.save_button.grid(row=28, column=1, pady=50)
         self.cancel_button = ctk.CTkButton(master=self, text='Cancel', command=self.handle_cancel)
-        self.cancel_button.grid(row=26, column=2, pady=50)
+        self.cancel_button.grid(row=28, column=2, pady=50)
 
 
     def generate_id(self):
@@ -207,7 +210,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.crop_id_input.insert(index=0, string=crop.generate_crop_id(ti.get_all_crop_id()))
 
 
-    def validate_input(self) -> bool:
+    def validate_input(self) -> bool: #TODO validate receiving loss
         empty_input_types = ['', None]
         not_required_empty_inputs = []
         if self.date_input.get() not in empty_input_types:
@@ -320,8 +323,10 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         if bool(self.to_gohaacp_check.get()):
             status += f'{self.write_to_gohaacp()}\n'
         if bool(self.make_labels_check.get()):
-            #TODO add check for printing, adjust param in make_tote_labels
-            status += f'{self.make_tote_labels(crop=crop)}\n'
+            if bool(self.print_labels_check.get()):
+                status += f'{self.make_tote_labels(crop=crop, to_print=True)}\n'
+            else:
+                status += f'{self.make_tote_labels(crop=crop)}'
         if bool(self.doc_directory_check.get()):
             status += f'{self.make_doc_directory()}\n'
         return status
@@ -445,11 +450,11 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
     def write_to_gohaacp() -> str:
         pass #TODO
 
-
+#TODO get receiving loss, update other functions to write receiving loss (write_to_receiving)
     def write_to_loss_log(self, crop:Crop) -> str:
         try:
             wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)
-            ws = wb['Log']
+            ws = wb['Receiving - Cleaning']
             grain_dv = DataValidation(type='list', formula1='"Wheat, Rye, Corn, Rice, Beans, Buckwheat"')
             ws.add_data_validation(grain_dv)
             org_dv = DataValidation(type='list', formula1='"ORGANIC, NOT ORGANIC"')
@@ -542,15 +547,17 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         #TODO
 
 
-    def make_tote_labels(self, crop:Crop, print=False) -> str:
+    def make_tote_labels(self, crop:Crop, to_print=False) -> str:
         full_path = Path(self.tote_label_path, crop.crop_id)
         full_path.mkdir(parents=True, exist_ok=True)
         lm = LabelMaker()
-        #TODO add in printing function if print=True
-        try: #FIXME  change path?
+        try:
             for tote in crop.totes:
                 lm.make_label(tote=tote, path=full_path)
-            return f'✅ Make Labels Successful\nSaved to "{self.tote_label_path}"'
+            if to_print:
+                lm.print_directory(full_path)
+                print_status = '✅ Print Successful'                
+            return f'✅ Make Labels Successful\nSaved to "{self.tote_label_path}"\n{print_status}'
         except Exception as e:
             return f'❌ Make Labels Failed:\n{e}\n'
 
