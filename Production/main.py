@@ -23,13 +23,17 @@ from gui import (
 )
 
 
-INVENTORY_PATH = 'TESTING FILES/Warehouse Inventory.xlsm' # FOR HOME / TESTING
+# Production
 # INVENTORY_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm')
-RECEIVING_PATH = 'TESTING FILES/The Receiving Log - 2022 to Current.xlsx' # temp path
 # RECEIVING_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/Receiving/The Receiving Log - 2022 to Current.xlsx')
-LOSS_LOG_PATH = 'TESTING FILES/Waste Log.xlsx'
 # LOSS_LOG_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
 TOTE_LABEL_SAVE_PATH = Path(Path().home(), "Desktop") # temp path
+
+# Testing
+INVENTORY_PATH = Path('TESTING FILES/Warehouse Inventory.xlsm')
+RECEIVING_PATH = Path('TESTING FILES/The Receiving Log - 2022 to Current.xlsx')
+LOSS_LOG_PATH = Path('TESTING FILES/Waste Log.xlsx')
+
 
 
 class App(ctk.CTk):
@@ -41,6 +45,7 @@ class App(ctk.CTk):
         self.tote_label_path = TOTE_LABEL_SAVE_PATH
         self.loss_log_path = LOSS_LOG_PATH
         self.data = self.get_data(path=self.inv_path)
+        self.loss_data = self.get_loss_data(path=self.loss_log_path)
         
         self.geometry('900x550')
         self.title('Warehouse Operations')
@@ -87,6 +92,7 @@ class App(ctk.CTk):
 
     def refresh(self):
         self.data = self.get_data(path=self.inv_path)
+        self.loss_data = self.get_loss_data(path=self.loss_log_path)
         self.inv_view = self.inv_dropdown_callback(choice=self.sidebar.inv_dropdown.get())
 
 
@@ -102,6 +108,19 @@ class App(ctk.CTk):
         data.dropna(subset=['Tote #'], inplace=True)
         # data.fillna(value=0, axis='COGs', inplace=True)
         return data
+    
+
+    def get_loss_data(self, path:Path) -> pd.DataFrame:
+        loss_data = pd.read_excel(
+            path.as_posix(),
+            index_col=False,
+            sheet_name='Receiving - Cleaning',
+            usecols='C,H,L',
+            engine='openpyxl',
+            parse_dates=['Date Cleaning Finished']
+        )
+        loss_data.dropna(subset=['Crop ID'], inplace=True)
+        return loss_data
 
 
 

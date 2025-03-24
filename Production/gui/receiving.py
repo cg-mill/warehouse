@@ -451,6 +451,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         pass #TODO
 
 #TODO get receiving loss, update other functions to write receiving loss (write_to_receiving)
+#TODO add date finished cleaning for crops clean on arrival
     def write_to_loss_log(self, crop:Crop) -> str:
         try:
             wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)

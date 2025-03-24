@@ -5,6 +5,7 @@ import json
 
 from Inventory import GrainVariety, WarehouseGrainInventory
 
+#TODO make Path objects and test
 INDEX_FILEPATH = 'Production/Inventory/data/variety_index.json'
 LOW_STOCK_INFO_PATH = 'Production/Inventory/data/ls.json'
 ENCODING = 'utf-8'
@@ -146,7 +147,7 @@ class NewVarietyIndexWindow(ctk.CTkToplevel):
         self.grab_set()
         
 
-class NewVarietyIndexFrame(ctk.CTkFrame):
+class NewVarietyIndexFrame(ctk.CTkFrame): #TODO add spot to add font info
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.master = master
@@ -172,7 +173,7 @@ class NewVarietyIndexFrame(ctk.CTkFrame):
         self.canel_button = ctk.CTkButton(master=self, text='Cancel', command=self.cancel_update)
         self.canel_button.pack(pady=(5, 20))
 
-    def g_type_options_callback(self, choice):
+    def g_type_options_callback(self, choice): #FIXME get rid of destroy and pack? appearing at bottom when updated
         self.index_options.destroy()
         self.index_options = ctk.CTkOptionMenu(self, values=self.type_ranges[self.g_type_options.get()])
         self.index_options.pack()
@@ -199,9 +200,9 @@ class VarietyIndexOptions(ctk.CTkFrame):
         #TODO
 
 
-class NewVarietyFontInfoWindow(ctk.CTkFrame):
+class NewSupplierFontInfoWindow(ctk.CTkFrame):
     pass #TODO
 
 
-class NewVarietyFontInfoFrame(ctk.CTkFrame):
+class NewSupplierFontInfoFrame(ctk.CTkFrame):
     pass #TODO
