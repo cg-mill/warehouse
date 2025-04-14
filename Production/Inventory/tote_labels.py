@@ -14,7 +14,8 @@ if TYPE_CHECKING:
     from Inventory import Tote, TotalInventory
 
 
-FONT_SIZE_INFO_PATH = 'Production/Inventory/data/font_info.json'
+# FONT_SIZE_INFO_PATH = 'Production/Inventory/data/font_info.json'
+FONT_SIZE_INFO_PATH = 'TESTING FILES/font_info.json' #FIXME remove
 ENCODING = 'utf-8'
 
 

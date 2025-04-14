@@ -18,7 +18,6 @@ from gui import (
     QuickViewFrame, 
     LowStockFrame, 
     LowStockEditFrame,
-    DetailedViewFrame,
     HomeSideBar
 )
 
@@ -33,7 +32,6 @@ TOTE_LABEL_SAVE_PATH = Path(Path().home(), "Desktop") # temp path
 INVENTORY_PATH = Path('TESTING FILES/Warehouse Inventory.xlsm')
 RECEIVING_PATH = Path('TESTING FILES/The Receiving Log - 2022 to Current.xlsx')
 LOSS_LOG_PATH = Path('TESTING FILES/Waste Log.xlsx')
-
 
 
 class App(ctk.CTk):

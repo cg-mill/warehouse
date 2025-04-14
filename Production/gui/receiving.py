@@ -12,7 +12,7 @@ from pathlib import Path
 import docx
 
 from Inventory import TotalInventory, Crop, Tote, LabelMaker
-from gui import TimeInput, MoistureProteinInput, NewVarietyIndexWindow
+from gui import TimeInput, MoistureProteinInput, NewVarietyWindow, NewSupplierFontInfoWindow, get_font_index_info
 
 
 class ReceivingWindow(ctk.CTkToplevel):
@@ -174,22 +174,24 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.to_inv_xl_check.grid(row=22, column=0, pady=5, sticky='W')
         self.to_rec_log_check = ctk.CTkCheckBox(master=self, text='Write to Receiving Log')
         self.to_rec_log_check.grid(row=23, column=0, pady=5, sticky='W')
+        self.to_loss_log_check = ctk.CTkCheckBox(master=self, text='Write to Loss Log')
+        self.to_loss_log_check.grid(row=24, column=0, pady=5, sticky='W')
         self.to_gohaacp_check = ctk.CTkCheckBox(master=self, text='Fill GoHAACP Form')
-        self.to_gohaacp_check.grid(row=24, column=0, pady=5, sticky='W')
+        self.to_gohaacp_check.grid(row=25, column=0, pady=5, sticky='W')
         self.make_labels_check = ctk.CTkCheckBox(master=self, text='Make Tote Labels')
-        self.make_labels_check.grid(row=25, column=0, pady=5, sticky='W')
+        self.make_labels_check.grid(row=26, column=0, pady=5, sticky='W')
         self.print_labels_check = ctk.CTkCheckBox(master=self, text='Print Tote Labels')
-        self.print_labels_check.grid(row=26, column=0, pady=5, sticky='W')
+        self.print_labels_check.grid(row=27, column=0, pady=5, sticky='W')
         self.doc_directory_check = ctk.CTkCheckBox(master=self, text='Make Directory for Receiving Documents')
-        self.doc_directory_check.grid(row=27, column=0, pady=5, sticky='W')
+        self.doc_directory_check.grid(row=28, column=0, pady=5, sticky='W')
 
-
+        #TODO remove save option
         self.submit_button = ctk.CTkButton(master=self, text='Submit', command=self.handle_submit)
-        self.submit_button.grid(row=28, column=0, pady=50)
+        self.submit_button.grid(row=29, column=0, pady=50)
         self.save_button = ctk.CTkButton(master=self, text='Save', command=self.handle_save)
-        self.save_button.grid(row=28, column=1, pady=50)
+        self.save_button.grid(row=29, column=1, pady=50)
         self.cancel_button = ctk.CTkButton(master=self, text='Cancel', command=self.handle_cancel)
-        self.cancel_button.grid(row=28, column=2, pady=50)
+        self.cancel_button.grid(row=29, column=2, pady=50)
 
 
     def generate_id(self):
@@ -210,9 +212,9 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.crop_id_input.insert(index=0, string=crop.generate_crop_id(ti.get_all_crop_id()))
 
 
-    def validate_input(self) -> bool: #TODO validate receiving loss
+    def validate_input(self) -> bool:
         empty_input_types = ['', None]
-        not_required_empty_inputs = []
+        not_required_empty_inputs = [] #NEEDED?
         if self.date_input.get() not in empty_input_types:
             try:
                 datetime(self.date_input.get())
@@ -236,18 +238,18 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             messagebox.showerror(title='No Supplier', message='Please enter a Supplier')
             return False
         if self.supplier_input.get() not in LabelMaker().font_info['Supplier'].keys():
-            messagebox.showwarning(title='No Font Info', message=f'Font Info not found for {self.supplier_input.get()}\nDouble Check Labels Before Printing')#FIXME open font info window
+            if messagebox.askokcancel(title='New Supplier', message=f'Font Info not found for {self.supplier_input.get()}\nAssign font info now?'):
+                ns_window = NewSupplierFontInfoWindow(supplier_name=self.supplier_input.get())
         if self.g_type_input.get() in empty_input_types:
             messagebox.showerror(title='No Grain Type', message='Please enter a grain type. e.g. "Wheat", "Rye", etc...')
             return False
         if self.g_variety_input.get() in empty_input_types:
             messagebox.showerror(title='No Variety', message='Please enter a Variety Name')
             return False
-        if self.g_variety_input.get() not in LabelMaker().font_info['Variety'].keys():
-            messagebox.showwarning(title='No Font Info', message=f'Font info not found for {self.g_variety_input.get()}\nDouble Check Labels Before Printing') #FIXME open font info window
-        if Crop(variety=self.g_variety_input.get()).get_index() == None:
-            if messagebox.askokcancel(title='New Variety', message=f'{self.g_variety_input.get()} has not been assigned an Index Value.\nAssign now?'):
-                nv_window = NewVarietyIndexWindow()
+        if self.g_variety_input.get() not in get_font_index_info()[1].keys():
+        # if Crop(variety=self.g_variety_input.get()).get_index() == None:
+            if messagebox.askokcancel(title='New Variety', message=f'"{self.g_variety_input.get()}" has not been received before.\nAssign index and font info now?'):
+                nv_window = NewVarietyWindow(var_name=self.g_variety_input.get())
             return False
         if self.crop_id_input.get() in empty_input_types:
             messagebox.showerror(title='No Crop ID', message='Please enter or generate a Crop ID')
@@ -301,6 +303,15 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             except ValueError:
                 messagebox.showerror(title='Invalid Input', message='Invalid COG input')
                 return False
+        if self.receiving_loss_input.get() != '':
+            try:
+                rec_loss = int(self.receiving_loss_input.get())
+                if rec_loss < 0:
+                    messagebox.showerror(title='Receiving Loss', message='Receiving Loss must be a positive number!')
+                    return False
+            except (ValueError, TypeError) as e:
+                messagebox.showerror(title='Receiving Loss', message='Receiving Loss must be a positive whole number!')
+                return False
         inputs:list[ctk.CTkEntry] = [self.children[item] for item in self.children if isinstance(self.children[item], ctk.CTkEntry)]
         textboxes:list[ctk.CTkTextbox] = [self.children[item] for item in self.children if isinstance(self.children[item], ctk.CTkTextbox )]
         for item in inputs:
@@ -320,6 +331,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             status += f'{self.write_to_inventory(crop=crop)}\n'
         if bool(self.to_rec_log_check.get()):
             status += f'{self.write_to_receiving(crop=crop)}\n'
+        if bool(self.to_loss_log_check.get()):
+            status += f'{self.write_to_loss_log(crop=crop)}'
         if bool(self.to_gohaacp_check.get()):
             status += f'{self.write_to_gohaacp()}\n'
         if bool(self.make_labels_check.get()):
@@ -409,6 +422,9 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 myco_to_write = 'FDA Safe Levels'
             else: 
                 myco_to_write = 'UNSAFE LEVELS'
+            notes_to_write = f'{self.parcel_id_input.get()}. {len(crop.totes)} x {crop.totes[0].weight}lbs totes. {crop.receiving_notes}.'
+            if int(self.receiving_loss_input.get()) > 0:
+                notes_to_write += f' Lost {self.receiving_loss_input.get()} to receiving.'
             wb = openpyxl.load_workbook(self.receiving_path)
             ws = wb.active
             for row in range(1, ws.max_row):
@@ -425,7 +441,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 7: self.doc_input.get(),
                 8: self.mat_inspect_input.get('0.0', 'end').strip(),
                 9: self.trailer_insp_input.get(),
-                10: f'{self.parcel_id_input.get()}. {len(crop.totes)} x {crop.totes[0].weight}lbs totes. {crop.receiving_notes}',
+                10: notes_to_write,
                 11: self.received_by_input.get(),
                 12: myco_to_write,
                 13: crop.moisture,
@@ -442,7 +458,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
             wb.save(self.receiving_path)
             wb.close()
-            return '✅ Write to Receiving Successful'
+            return '✅ Write to Receiving Successful\n'
         except Exception as e:
             return f'❌ Write to Receiving Failed \n{e}\n'
 
@@ -450,8 +466,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
     def write_to_gohaacp() -> str:
         pass #TODO
 
-#TODO get receiving loss, update other functions to write receiving loss (write_to_receiving)
-#TODO add date finished cleaning for crops clean on arrival
+
     def write_to_loss_log(self, crop:Crop) -> str:
         try:
             wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)
@@ -478,17 +493,18 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 5: crop.supplier,
                 6: org_status,
                 7: crop.total_weight,
-                # 8: TODO add receiving loss?
+                9: self.receiving_loss_input.get()
             }
             if crop.is_clean:
                 crop_data.update({
-                    9: 0,
-                    10: crop.total_weight,
-                    13: 0
+                    8: crop.date_received.strftime("%m%d%Y"),
+                    10: 0,
+                    11: crop.total_weight - int(self.receiving_loss_input.get()),
+                    14: 0
                 })
+            return '✅ Write to Loss Log Successful\n'
         except Exception as e:
             return f'❌ Write to Loss Log Failed \n{e}\n'
-        #TODO Finish
 
 
     def write_to_inventory(self, crop:Crop) -> str:
@@ -542,10 +558,9 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 row_to_write += 1
             wb.save(self.inv_path)
             wb.close()
-            return '✅ Write to Inventory Successful'
+            return '✅ Write to Inventory Successful\n'
         except Exception as e:
             return f'❌ Write to Inventory Failed \n{e}\n'
-        #TODO
 
 
     def make_tote_labels(self, crop:Crop, to_print=False) -> str:
@@ -560,6 +575,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 print_status = '✅ Print Successful'                
             return f'✅ Make Labels Successful\nSaved to "{self.tote_label_path}"\n{print_status}'
         except Exception as e:
+            print(e) #FIXME remove when no longer needed
             return f'❌ Make Labels Failed:\n{e}\n'
 
 
@@ -578,7 +594,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
 
     def handle_save(self):
-        pass#TODO
+        pass#TODO remove
 
 
     def handle_cancel(self):

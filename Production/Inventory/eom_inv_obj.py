@@ -11,7 +11,7 @@ from pathlib import Path
 ENCODING = 'utf-8'
 PREV_HIST_PATH = 'Production/Inventory/data/eom/prev_his.json'
 ALL_HIST_PATH = 'Production/Inventory/data/eom/total_history.json'
-# EXCEL_SAVE_TO_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
+# EXCEL_SAVE_TO_PATH = Path.home().joinpath('Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
 EXCEL_SAVE_TO_PATH = Path('TESTING FILES')
 
 
@@ -24,6 +24,7 @@ class EOMGrainVariety:
         self.total_weight:int = 0 
         self.total_value:float | None = None
         self.loss:int = 0
+
 
     def get_total_value(self) -> None:
         self.total_value = self.total_weight * self.cog
@@ -43,8 +44,6 @@ class EOMWarehouseInventory:
         self.total_inv_value:float = self.get_total_value()
         self.get_var_loss()
         self.add_org_variety_names()
-        self.prev_history:dict = self.load_prev_json()
-        self.all_history:list[dict] = self.load_history_json()
 
     
     def get_eom_date(self) -> datetime:
@@ -55,6 +54,24 @@ class EOMWarehouseInventory:
         else: 
             return current_date - timedelta(days=current_date.day)
         
+
+    def get_eom_dates(self) -> tuple[datetime]:
+        current_date = datetime.now()
+        previous_eom = current_date - timedelta(days=current_date.day)
+        next_eom = current_date
+        while next_eom.month == current_date.month:
+            next_eom += timedelta(days=1)
+        next_eom -= timedelta(days=1)
+        return (previous_eom, next_eom)
+    
+
+    def choose_date_console(self):
+        dates:tuple[datetime] = self.get_eom_dates()
+        for i in range(len(dates)):
+            print(f'{i}: {dates[i].date()}')
+        answer = int(input('Please choose a number: '))
+        return dates[answer]
+
 
     def get_all_cogs_varieties(self) -> list[tuple]:
         '''Get list of all varieties with associated COG as a tuple'''
@@ -116,7 +133,7 @@ class EOMWarehouseInventory:
 
 
     def get_var_loss(self) -> None:
-        for row in loss_data.iterrows():
+        for row in self.loss_data.iterrows():
             r = row[1]
             for var in self.all_inventory:
                 for crop in var.crop_id_list:
@@ -228,14 +245,11 @@ class EOMWarehouseInventory:
     
 
 if __name__ == "__main__":
-    
-    # LOSS_LOG_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
-    INVENTORY_PATH = f"{os.environ['USERPROFILE']}/Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm" # FOR WORK
-
-    LOSS_LOG_PATH = Path('TESTING FILES/Waste Log.xlsx') #TESTING
+    LOSS_LOG_PATH = Path.home().joinpath('Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
+    INVENTORY_PATH = Path.home().joinpath('Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm') # FOR WORK
 
     data = pd.read_excel(
-        INVENTORY_PATH, 
+        INVENTORY_PATH.as_posix(),
         index_col=False,
         sheet_name='All',
         usecols='A:N,P,Q',
@@ -258,4 +272,5 @@ if __name__ == "__main__":
 
     # eom.save_prev_json()
     # eom.save_to_history_json() 
-    eom.save_to_xlsx()
+    # eom.save_to_xlsx()
+    eom.choose_date_console()

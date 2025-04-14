@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import pandas as pd
 
-from gui import ReceivingWindow, NewVarietyIndexWindow
+from gui import ReceivingWindow, NewVarietyWindow
 from Inventory import TotalInventory, WarehouseGrainInventory
 
 from typing import TYPE_CHECKING
@@ -17,11 +17,14 @@ class HomeSideBar(ctk.CTkFrame):
         #TODO set GoHAACP credentials, seve to json
         #TODO Generate End of Month Inventory
         #TODO Set index for new varieties
+        #TODO remove detailed view option. 
+        #TODO remove index button and change to generate EOM 
+        #TODO remove load report
         self.inv_label = ctk.CTkLabel(self, text='Inventory', anchor='nw')
         self.inv_label.grid(row=0, column=0)
         self.inv_dropdown = ctk.CTkOptionMenu(
             self, 
-            values=['Low Stock', 'Quick View', 'Detailed View']
+            values=['Low Stock', 'Quick View']
             )
         self.inv_dropdown.grid(row=1, column=0)
         self.set_low_stock_button = ctk.CTkButton(self, text='Set Low Stock Levels')
@@ -39,13 +42,13 @@ class HomeSideBar(ctk.CTkFrame):
             self, 
             text='Load Report', 
             command=self.load_receiving_window
-            )
+            )#TODO remove and add in button for end of year report
         self.load_receiving_button.grid(row=5, column=0, pady=5)
     
         self.totals_label = ctk.CTkLabel(self, text='', anchor='w', height=150, justify='left')
         self.totals_label.grid(row=6, column=0, pady=10)
         self.nv_index_button = ctk.CTkButton(self, text='Add New Variety to Index', anchor='w', height=50, command=self.open_new_variety_index_form)
-        self.nv_index_button.grid(row=7, column=0, pady=10)
+        self.nv_index_button.grid(row=7, column=0, pady=10) #TODO remove and add in end of month inventory
         self.error_label = ctk.CTkLabel(self, text='errors', anchor='sw', height=50)
         self.error_label.grid(row=8, column=0)
 
@@ -71,21 +74,19 @@ class HomeSideBar(ctk.CTkFrame):
                 tote_label_path=self.master.tote_label_path,
                 loss_log_path=self.master.loss_log_path
                 )
-        
-            # self.error_label.bind(self.receiving_window.status_var) #FIXME
         else:
             self.receiving_window.focus()
 
 
-    def open_new_variety_index_form(self): #FIXME widgets reorder when switching grain types
+    def open_new_variety_index_form(self):
         if self.nv_index_window is None or not self.nv_index_window.winfo_exists():
-            self.nv_index_window = NewVarietyIndexWindow()
+            self.nv_index_window = NewVarietyWindow()
         else:
             self.nv_index_window.focus()
 
 
     def update_gohaacp_creds():
-        pass #TODO    
+        pass #TODO 
 
     def load_receiving_window(self):
-        pass #TODO
+        pass #TODO remove

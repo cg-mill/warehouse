@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException
 import time
 from datetime import datetime
 import json
@@ -31,7 +31,6 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
 
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get(url=URL)
-        # time.sleep(4)
         self.login()
 
 
@@ -43,30 +42,69 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         inputs[0].send_keys(self.username)
         inputs[1].send_keys(self.password)
         login_button = self.driver.find_element(By.XPATH, value='//*[@id="root"]/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div/div[1]/div[1]/div[3]/div')
-        login_button.click()
+        self.check_click(login_button)
+        # login_button.click()
         # time.sleep(5) #FIXME delete sleeps if 
         # TODO implement nosuchelement exeption in loops to speed up sleep times
 
 
-    def new_report(self):
-        found = False
-        while not found:
+    def check_click(self, button) -> None:
+        max_iterations = 50
+        for _ in range(max_iterations):
             try:
-                self.new_report_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "New Reports")]')
-                found = True
+                button.click()
+                time.sleep(1)
+                return
+            except (ElementClickInterceptedException, ElementNotInteractableException):
                 time.sleep(0.5)
-            except NoSuchElementException:
+        print(f'Click {button} timed out...')
+
+
+    def check_for_item(self, item:str) -> None:
+        max_iterations = 50
+        for _ in range(max_iterations):
+            try:
+                self.new_report_button = self.driver.find_element(By.XPATH, value=f'//div[contains(text(), "{item}")]')
+                time.sleep(1)
+                return
+            except (NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException):
                 time.sleep(0.5)
-        self.new_report_button.click()
-        time.sleep(8)
+        print(f'check for: "{item}" timed out.')
+
+
+    def check_for_items(self):
+        pass #TODO check for list of items like in self.login
+
+
+    # def check_for_new_report(self) -> None:
+    #     max_iterations = 50
+    #     for _ in range(max_iterations):
+    #         try:
+    #             self.new_report_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "New Reports")]')
+    #             found = True
+    #             time.sleep(0.5)
+    #             return
+    #         except NoSuchElementException:
+    #             time.sleep(0.5)
+    #     print('check_for_new_report timed out.')
+
+
+    def new_report(self):
+        # self.check_for_new_report()
+        self.check_for_item('New Reports')
+        self.check_click(self.new_report_button)
+        # self.new_report_button.click()
+        # time.sleep(8)
 
 
     def submit_report(self):
         send_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "Send Report")]')
         self.driver.execute_script("arguments[0].scrollIntoView();", send_button)
-        time.sleep(2)
-        send_button.click()
-        time.sleep(20)
+        time.sleep(1)
+        self.check_click(send_button)
+        # send_button.click()
+        self.check_for_item('New Reports')
+        # time.sleep(20)
 
 
 class EODChecklist(GoHAACP):
@@ -84,10 +122,13 @@ class EODChecklist(GoHAACP):
 
 
     def front_checklist(self):
-        start = self.driver.find_element(By.XPATH, value='//div[contains(text(), "SSOP-R-CF Daily Closing Log - General Facility - Front")]')
+        log_name = 'SSOP-R-CF Daily Closing Log - General Facility - Front'
+        self.check_for_item(log_name)
+        start = self.driver.find_element(By.XPATH, value=f'//div[contains(text(), "{log_name}")]')
         self.driver.execute_script("arguments[0].scrollIntoView();", start)
         time.sleep(1)
-        start.click()
+        # start.click()
+        self.check_click(start)
         time.sleep(3)
         initial_inputs = self.driver.find_elements(By.TAG_NAME, value='textarea')
         checkboxes = self.driver.find_elements(By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
@@ -106,10 +147,13 @@ class EODChecklist(GoHAACP):
 
 
     def warehouse_checklist(self):
-        start = self.driver.find_element(By.XPATH, value='//div[contains(text(), "SSOP-R-CF Daily Closing Log - Warehouse")]')
+        log_name = 'SSOP-R-CF Daily Closing Log - Warehouse'
+        self.check_for_item(log_name)
+        start = self.driver.find_element(By.XPATH, value=f'//div[contains(text(), "{log_name}")]')
         self.driver.execute_script("arguments[0].scrollIntoView();", start)
         time.sleep(1)
-        start.click()
+        self.check_click(start)
+        # start.click()
         time.sleep(3)
         initail_input = self.driver.find_element(By.TAG_NAME, value='textarea')
         checkboxes = self.driver.find_elements(By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
