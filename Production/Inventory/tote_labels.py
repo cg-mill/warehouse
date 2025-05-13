@@ -1,9 +1,14 @@
 from datetime import datetime
 import json
 import docx
+import docx.document
 from docx.enum.section import WD_ORIENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, Inches, RGBColor
+import docx.shared
+import docx.text
+from docx.text.parfmt import ParagraphFormat
+from docx.text import paragraph
 from win32 import win32print
 from win32 import win32api
 from pathlib import Path
@@ -19,7 +24,7 @@ FONT_SIZE_INFO_PATH = 'TESTING FILES/font_info.json' #FIXME remove
 ENCODING = 'utf-8'
 
 
-class LabelMaker: #TODO print docs
+class LabelMaker:
     def __init__(self):
         self.font_info = self.load_font_info()
 
@@ -47,8 +52,13 @@ class LabelMaker: #TODO print docs
             json.dump(font_dict, file, indent=4)
 
 
-    def add_font_info(self):
-        pass#TODO
+    def variety_to_print(self, tote:'Tote') -> str: #TODO test
+        if tote.grain_type in ['Wheat', 'Buckwheat']:
+            return tote.variety
+        elif tote.grain_type == 'Rice':
+            return f'{tote.grain_type, tote.variety}'
+        else:
+            return f'{tote.variety} {tote.grain_type}'
     
 
     def make_label(self, tote:'Tote', path:Path):
@@ -83,7 +93,7 @@ class LabelMaker: #TODO print docs
         var_label.font.name = FONT_NAME
         var_label.font.size = LG_FONT
 
-        variety = var_par.add_run(tote.variety)
+        variety = var_par.add_run(self.variety_to_print(tote))
         variety.font.name = FONT_NAME
         variety.font.size = Pt(self.font_info['Variety'][tote.variety])
 
@@ -98,19 +108,24 @@ class LabelMaker: #TODO print docs
         date_par = doc.add_paragraph().add_run(f'Date Received: {tote.date_received.strftime('%m/%d/%Y')}')
         date_par.font.size = SM_FONT
         date_par.font.name = FONT_NAME
-
+        
         m_p_par = doc.add_paragraph()
+        tab_stops = ParagraphFormat(parent=m_p_par).tab_stops
+        tab_stops.add_tab_stop(Inches(5.5))
         moisture_length = len(str(tote.moisture))
-        if moisture_length >= 5:
+        if moisture_length >= 5:#FIXME
             tabs = 4
-        elif 2 <= moisture_length < 5:
+        else:
             tabs = 5
-        else:
-            tabs = 7
+        # elif 2 <= moisture_length < 5:
+        #     tabs = 5
+        # else:
+        #     tabs = 7
         if tote.moisture > 0.0:
-            m_p_par.add_run(f'Moisture: {tote.moisture:.2f}%{'\t'*tabs}')
+            m_p_par.add_run(f'Moisture: {tote.moisture:.2f}%')#{'\t'*tabs}
         else:
-            m_p_par.add_run(f'Moisture:{'\t'*tabs}')
+            m_p_par.add_run(f'Moisture:')#{'\t'*tabs}
+        m_p_par.add_run().add_tab()#TODO
         if tote.protein > 0.0:
             m_p_par.add_run(f'Protein: {tote.protein:.2f}%')
         else:
@@ -118,7 +133,6 @@ class LabelMaker: #TODO print docs
         for run in m_p_par.runs:
             run.font.size = SM_FONT
             run.font.name = FONT_NAME
-
         date_weight_par = doc.add_paragraph()
         if tote.is_clean:
             tabs = 5
@@ -172,7 +186,6 @@ class LabelMaker: #TODO print docs
 
 
 if __name__ == "__main__":
-    pass
     # path = Path(Path().home(), 'Desktop/JONRYM24B')
     # # for file in path.iterdir():
     # #     print(file)
@@ -205,3 +218,4 @@ if __name__ == "__main__":
 
     # LabelMaker().make_label(tote=tote, path=path)
     # print(LabelMaker().font_info['Variety'].keys())
+    pass

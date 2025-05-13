@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException
+from selenium.webdriver.remote.webelement import WebElement
 import time
 from datetime import datetime
 import json
@@ -48,20 +49,20 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         # TODO implement nosuchelement exeption in loops to speed up sleep times
 
 
-    def check_click(self, button) -> None:
-        max_iterations = 50
+    def check_click(self, button:WebElement) -> None:
+        max_iterations = 100
         for _ in range(max_iterations):
             try:
                 button.click()
                 time.sleep(1)
                 return
-            except (ElementClickInterceptedException, ElementNotInteractableException):
+            except (NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException):
                 time.sleep(0.5)
-        print(f'Click {button} timed out...')
+        print(f'<Click> {button.accessible_name} timed out...')
 
 
     def check_for_item(self, item:str) -> None:
-        max_iterations = 50
+        max_iterations = 100
         for _ in range(max_iterations):
             try:
                 self.new_report_button = self.driver.find_element(By.XPATH, value=f'//div[contains(text(), "{item}")]')
@@ -69,32 +70,16 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
                 return
             except (NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException):
                 time.sleep(0.5)
-        print(f'check for: "{item}" timed out.')
+        print(f'check for: "{item}" timed out...')
 
 
     def check_for_items(self):
         pass #TODO check for list of items like in self.login
 
 
-    # def check_for_new_report(self) -> None:
-    #     max_iterations = 50
-    #     for _ in range(max_iterations):
-    #         try:
-    #             self.new_report_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "New Reports")]')
-    #             found = True
-    #             time.sleep(0.5)
-    #             return
-    #         except NoSuchElementException:
-    #             time.sleep(0.5)
-    #     print('check_for_new_report timed out.')
-
-
     def new_report(self):
-        # self.check_for_new_report()
         self.check_for_item('New Reports')
         self.check_click(self.new_report_button)
-        # self.new_report_button.click()
-        # time.sleep(8)
 
 
     def submit_report(self):

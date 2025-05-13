@@ -24,14 +24,16 @@ from gui import (
 
 # Production
 # INVENTORY_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm')
-# RECEIVING_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/Receiving/The Receiving Log - 2022 to Current.xlsx')
-# LOSS_LOG_PATH = Path(Path().home(), '/Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
+# RECEIVING_PATH = Path(Path().home(), 'Team BSM Dropbox/Food Safety/Receiving/The Receiving Log - 2022 to Current.xlsx')
+# LOSS_LOG_PATH = Path(Path().home(), 'Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
+# EOM_SAVE_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
 TOTE_LABEL_SAVE_PATH = Path(Path().home(), "Desktop") # temp path
 
 # Testing
 INVENTORY_PATH = Path('TESTING FILES/Warehouse Inventory.xlsm')
 RECEIVING_PATH = Path('TESTING FILES/The Receiving Log - 2022 to Current.xlsx')
 LOSS_LOG_PATH = Path('TESTING FILES/Waste Log.xlsx')
+EOM_SAVE_PATH = Path('TESTING FILES')
 
 
 class App(ctk.CTk):
@@ -42,6 +44,7 @@ class App(ctk.CTk):
         self.receiving_path = RECEIVING_PATH
         self.tote_label_path = TOTE_LABEL_SAVE_PATH
         self.loss_log_path = LOSS_LOG_PATH
+        self.eom_save_path = EOM_SAVE_PATH
         self.data = self.get_data(path=self.inv_path)
         self.loss_data = self.get_loss_data(path=self.loss_log_path)
         
@@ -54,7 +57,7 @@ class App(ctk.CTk):
         
         self.refresh_button = ctk.CTkButton(master=self, text='Refresh', command=self.refresh, height=25, width = 100)
         self.refresh_button.grid(row=0, column=0)
-        self.sidebar = HomeSideBar(master=self, data=self.data, width=100, height=self._current_height)
+        self.sidebar = HomeSideBar(master=self, data=self.data, loss_data=self.loss_data, width=100, height=self._current_height)
         self.sidebar.grid(row=1, column=0, rowspan=1, sticky='nw', pady=15)
         self.sidebar.set_totals_label(data=self.data)
         self.sidebar.inv_dropdown.configure(command=self.inv_dropdown_callback)
@@ -68,8 +71,6 @@ class App(ctk.CTk):
         self.inv_view.destroy()
         if choice == 'Quick View':
             self.inv_view = QuickViewFrame(master=self, data=self.data, height=self._current_height, width=700)
-        elif choice == 'Detialed View':
-            pass
         else:
             self.inv_view = LowStockFrame(master=self, data=self.data, height=self._current_height, width=700)  
         self.inv_view.grid(row=0, column=1, rowspan=2, sticky='ns')
@@ -119,7 +120,6 @@ class App(ctk.CTk):
         )
         loss_data.dropna(subset=['Crop ID'], inplace=True)
         return loss_data
-
 
 
 if __name__ == '__main__':

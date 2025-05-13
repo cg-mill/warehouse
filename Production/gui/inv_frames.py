@@ -2,8 +2,10 @@ import customtkinter as ctk
 import pandas as pd
 from tkinter import messagebox
 import json
+from pathlib import Path
+from datetime import datetime
 
-from Inventory import GrainVariety, WarehouseGrainInventory
+from Inventory import GrainVariety, WarehouseGrainInventory, EOMWarehouseInventory
 
 #TODO make Path objects and test
 # INDEX_FILEPATH = 'Production/Inventory/data/variety_index.json'
@@ -227,7 +229,7 @@ class NewVarietyFrame(ctk.CTkFrame):
             variety = self.variety_entry.cget('placeholder_text')
         if self.validate_font():
             if messagebox.askokcancel(title='Confirm Information', message=f'{variety} will be assigned:\nIndex: {self.index_options.get()}\nFont Size: {self.font_size_entry.get()}\nCorrect?'):
-                self.var_indexes.update({variety:self.index_options.get()})
+                self.var_indexes.update({variety:int(self.index_options.get())})
                 self.font_info['Variety'].update({variety:self.font_size_entry.get()})        
                 with open(INDEX_FILEPATH, 'w', encoding=ENCODING) as file:
                     json.dump(self.var_indexes, file, indent=4)
@@ -291,7 +293,7 @@ class NewSupplierFontInfoFrame(ctk.CTkFrame):
             supplier = self.supplier_entry.cget('placeholder_text')
         if self.validate_font():
             if messagebox.askokcancel(title='Confirm Info', message=f'{supplier} will be assigned a font size of {self.font_entry.get()}\nCorrect?'):
-                self.font_info['Supplier'].update({supplier:self.font_entry.get()})
+                self.font_info['Supplier'].update({supplier:int(self.font_entry.get())})
                 with open(FONT_INFO_PATH, 'w', encoding=ENCODING) as file:
                     json.dump(self.font_info, file, indent=4)
         self.master.destroy()
@@ -302,7 +304,32 @@ class NewSupplierFontInfoFrame(ctk.CTkFrame):
 
 
 class EOMInventoryWindow(ctk.CTkToplevel):
-    pass
+    def __init__(self, data:pd.DataFrame, loss_data:pd.DataFrame, save_path:Path, *args, fg_color = None, **kwargs):
+        super().__init__(*args, fg_color=fg_color, **kwargs)
+        self.data = data
+        self.loss_data = loss_data
+        self.save_path = save_path
+        self.geometry('250x150')
+        self.title('Generate End of Month Report')
+        self.view = EOMInventoryFrame(master=self, data=self.data, loss_data=self.loss_data, save_path=self.save_path)
+        self.view.pack()
+        self.grab_set()
+
 
 class EOMInventoryFrame(ctk.CTkFrame):
-    pass
+    def __init__(self, master, data:pd.DataFrame, loss_data:pd.DataFrame, save_path:Path, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.data = data
+        self.loss_data = loss_data
+        self.save_path = save_path
+        self.eom_inv = EOMWarehouseInventory(save_path=self.save_path, data=self.data, loss_data=self.loss_data)
+        self.date_options = ctk.CTkOptionMenu(master=self, values=self.eom_inv.get_eom_dates())
+        self.date_options.pack(pady=(10,5))
+        self.generate_button = ctk.CTkButton(master=self, text='Generate', command=self.generate_report)
+        self.generate_button.pack(pady=(5,10))
+
+
+    def generate_report(self):
+        self.eom_inv.eom_time = datetime(self.date_options.get())
+        self.eom_inv.save_to_xlsx()
+        

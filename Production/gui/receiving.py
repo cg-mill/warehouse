@@ -176,22 +176,17 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.to_rec_log_check.grid(row=23, column=0, pady=5, sticky='W')
         self.to_loss_log_check = ctk.CTkCheckBox(master=self, text='Write to Loss Log')
         self.to_loss_log_check.grid(row=24, column=0, pady=5, sticky='W')
-        self.to_gohaacp_check = ctk.CTkCheckBox(master=self, text='Fill GoHAACP Form')
-        self.to_gohaacp_check.grid(row=25, column=0, pady=5, sticky='W')
         self.make_labels_check = ctk.CTkCheckBox(master=self, text='Make Tote Labels')
-        self.make_labels_check.grid(row=26, column=0, pady=5, sticky='W')
+        self.make_labels_check.grid(row=25, column=0, pady=5, sticky='W')
         self.print_labels_check = ctk.CTkCheckBox(master=self, text='Print Tote Labels')
-        self.print_labels_check.grid(row=27, column=0, pady=5, sticky='W')
+        self.print_labels_check.grid(row=26, column=0, pady=5, sticky='W')
         self.doc_directory_check = ctk.CTkCheckBox(master=self, text='Make Directory for Receiving Documents')
-        self.doc_directory_check.grid(row=28, column=0, pady=5, sticky='W')
+        self.doc_directory_check.grid(row=27, column=0, pady=5, sticky='W')
 
-        #TODO remove save option
         self.submit_button = ctk.CTkButton(master=self, text='Submit', command=self.handle_submit)
-        self.submit_button.grid(row=29, column=0, pady=50)
-        self.save_button = ctk.CTkButton(master=self, text='Save', command=self.handle_save)
-        self.save_button.grid(row=29, column=1, pady=50)
+        self.submit_button.grid(row=28, column=0, pady=50)
         self.cancel_button = ctk.CTkButton(master=self, text='Cancel', command=self.handle_cancel)
-        self.cancel_button.grid(row=29, column=2, pady=50)
+        self.cancel_button.grid(row=28, column=1, pady=50)
 
 
     def generate_id(self):
@@ -333,8 +328,6 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             status += f'{self.write_to_receiving(crop=crop)}\n'
         if bool(self.to_loss_log_check.get()):
             status += f'{self.write_to_loss_log(crop=crop)}'
-        if bool(self.to_gohaacp_check.get()):
-            status += f'{self.write_to_gohaacp()}\n'
         if bool(self.make_labels_check.get()):
             if bool(self.print_labels_check.get()):
                 status += f'{self.make_tote_labels(crop=crop, to_print=True)}\n'
@@ -407,7 +400,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             return None
         
 
-    def write_to_receiving(self, crop:Crop) -> str: #FIXME single variety ie Buckwheat will write Buckwheat, Buckwheat. Other issues? Needs further testing
+    def write_to_receiving(self, crop:Crop) -> str: #FIXME CHECK-FIXED?-single variety ie Buckwheat will write Buckwheat, Buckwheat. Other issues? Needs further testing
         alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         try:
             date_to_write = f'{crop.date_received.month}.{crop.date_received.day}.{crop.date_received.year}/'
@@ -448,6 +441,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 14: crop.protein,
                 15: self.corrections_input.get('0.0', 'end').strip()
             }
+            if crop.variety == 'Buckwheat':
+                data[1] = 'Buckwheat'
             for key, value in data.items():
                 cell = ws.cell(row=row_to_write, column=key)
                 cell.value = value
@@ -461,10 +456,6 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             return '✅ Write to Receiving Successful\n'
         except Exception as e:
             return f'❌ Write to Receiving Failed \n{e}\n'
-
-
-    def write_to_gohaacp() -> str:
-        pass #TODO
 
 
     def write_to_loss_log(self, crop:Crop) -> str:
@@ -502,6 +493,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                     11: crop.total_weight - int(self.receiving_loss_input.get()),
                     14: 0
                 })
+            wb.save(self.loss_log_path)
+            wb.close()
             return '✅ Write to Loss Log Successful\n'
         except Exception as e:
             return f'❌ Write to Loss Log Failed \n{e}\n'
@@ -572,10 +565,12 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 lm.make_label(tote=tote, path=full_path)
             if to_print:
                 lm.print_directory(full_path)
-                print_status = '✅ Print Successful'                
+                print_status = '✅ Print Successful'  
+            else:
+                print_status = ''              
             return f'✅ Make Labels Successful\nSaved to "{self.tote_label_path}"\n{print_status}'
-        except Exception as e:
-            print(e) #FIXME remove when no longer needed
+        except IndentationError as e:
+        # except Exception as e:
             return f'❌ Make Labels Failed:\n{e}\n'
 
 
@@ -591,10 +586,6 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             return '✅ Create Document Directory Successful'
         except Exception as e:
             return f'❌ Make Document Directory Failed \n{e}\n'
-
-
-    def handle_save(self):
-        pass#TODO remove
 
 
     def handle_cancel(self):
