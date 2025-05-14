@@ -7,15 +7,15 @@ from datetime import datetime
 
 from Inventory import GrainVariety, WarehouseGrainInventory, EOMWarehouseInventory
 
-#TODO make Path objects and test
-# INDEX_FILEPATH = 'Production/Inventory/data/variety_index.json'
-# FONT_INFO_PATH = 'Production/Inventory/data/font_info.json'
-LOW_STOCK_INFO_PATH = 'Production/Inventory/data/ls.json'
+
+INDEX_FILEPATH = Path('Production/Inventory/data/variety_index.json')
+FONT_INFO_PATH = Path('Production/Inventory/data/font_info.json')
+LOW_STOCK_INFO_PATH = Path('Production/Inventory/data/ls.json')
 ENCODING = 'utf-8'
 
 #TESTING PATHS
-INDEX_FILEPATH = 'TESTING FILES/variety_index.json'
-FONT_INFO_PATH = 'TESTING FILES/font_info.json'
+INDEX_FILEPATH = Path('TESTING FILES/variety_index.json')
+FONT_INFO_PATH = Path('TESTING FILES/font_info.json')
 
 
 def get_font_index_info() -> tuple[dict, dict]:
@@ -66,8 +66,7 @@ class LowStockEditFrame(ctk.CTkScrollableFrame):
         self.submit_button = ctk.CTkButton(master=self,text='Submit', command=self.submit_call)
         self.submit_button.pack(pady=5)
         self.cancel_button = ctk.CTkButton(master=self, text='Cancel')            
-        self.cancel_button.pack(pady=(5,30)) #TODO make success messsagebox instead of label. 
-        self.success_label = ctk.CTkLabel(master=self, text='Saved', text_color='green')
+        self.cancel_button.pack(pady=(5,30))
     
 
     def submit_call(self):
@@ -87,11 +86,7 @@ class LowStockEditFrame(ctk.CTkScrollableFrame):
                 ls_data.update({name:val})
         with open(LOW_STOCK_INFO_PATH, mode='w', encoding=ENCODING) as file:
             json.dump(ls_data, file, indent=4)
-        # print(self.grid_info())
-        # for item in self.pack_slaves():
-        #     self.pack_forget()
-        self.success_label.pack(pady=(0,20))
-
+        messagebox.showinfo(title='Success!', message='Low Stock values updated!')
 
 
 class QuickViewFrame(ctk.CTkScrollableFrame):
@@ -143,12 +138,6 @@ class SingleVarietyFrame(ctk.CTkFrame):
         self.sst_value.grid(row=2, column=3)
         self.ssw_value = ctk.CTkLabel(self, text=variety.seed_stock_weight)
         self.ssw_value.grid(row=3, column=3, pady=(0,5))
-
-
-class FontInfoFrame(ctk.CTkFrame):
-    def __init__(self, master, key:str, item_name:str, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
-        pass#TODO ? Necessary or not?
 
 
 class NewVarietyWindow(ctk.CTkToplevel):
@@ -330,6 +319,17 @@ class EOMInventoryFrame(ctk.CTkFrame):
 
 
     def generate_report(self):
-        self.eom_inv.eom_time = datetime(self.date_options.get())
-        self.eom_inv.save_to_xlsx()
-        
+        self.eom_inv.eom_time = datetime.fromisoformat(self.date_options.get())
+        if self.eom_inv.empty_cogs != []:
+            var_list = [var.variety for var in self.eom_inv.empty_cogs]
+            var_string = '\n'
+            for var in var_list:
+                var_string += f'{var}\n'
+            messagebox.showwarning(title='No COG', message=f'The following varietis have no COG:{var_string}')
+        self.eom_inv.get_var_loss()
+        try:
+            self.eom_inv.save_to_xlsx()
+            messagebox.showinfo(title='Success!', message=f'Report saved to\n{self.eom_inv.save_path.as_posix()}/{self.eom_inv.eom_time.year}')
+            self.master.destroy()
+        except Exception as e:
+            messagebox.showerror(title='Save Failed', message=f'Failed to save:\n{e}')

@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import pandas as pd
+import webbrowser
 
 from gui import ReceivingWindow, NewVarietyWindow, EOMInventoryWindow
 from Inventory import TotalInventory, EOMWarehouseInventory, WarehouseGrainInventory
@@ -15,9 +16,6 @@ class HomeSideBar(ctk.CTkFrame):
         self.data = data
         self.loss_data = loss_data
         self.master = master
-        #TODO set GoHAACP credentials, seve to json
-        #TODO Generate End of Month Inventory
-        #TODO remove load report
         self.inv_label = ctk.CTkLabel(self, text='Inventory', anchor='nw')
         self.inv_label.grid(row=0, column=0)
         self.inv_dropdown = ctk.CTkOptionMenu(
@@ -44,8 +42,18 @@ class HomeSideBar(ctk.CTkFrame):
         self.totals_label = ctk.CTkLabel(self, text='', anchor='w', height=150, justify='left')
         self.totals_label.grid(row=7, column=0, pady=10)
 
+        source_link_text = 'Source Code'
+        source_link_url = 'https://github.com/cg-mill/warehouse/tree/main/Production'
+        source_label = ctk.CTkLabel(master=self, text_color='green', text=source_link_text)
+        source_label.bind("<Button-1>", lambda e: self.open_link(source_link_url))
+        source_label.grid(row=8, column=0, pady=(10,5))
+
         self.receiving_window:ctk.CTkToplevel = None
         self.eom_window:ctk.CTkToplevel = None
+
+
+    def open_link(self, url):
+        webbrowser.open_new(url=url)
 
 
     def set_totals_label(self, data:pd.DataFrame):
@@ -82,7 +90,3 @@ class HomeSideBar(ctk.CTkFrame):
             self.eom_window = EOMInventoryWindow(data=self.data, loss_data=self.loss_data, save_path=self.master.eom_save_path)
         else:
             self.eom_window.focus()
-
-
-    def update_gohaacp_creds():
-        pass #TODO 

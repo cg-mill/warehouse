@@ -39,7 +39,7 @@ class LabelMaker:
             return {}
     
 
-    def set_word_font_sizes(self, inv:'TotalInventory'):
+    def _set_word_font_sizes_console(self, inv:'TotalInventory'):
         font_dict = {
             "Variety": {
                 variety : int(input(f'Font Size for Variety -- {variety}:\n')) for variety in inv.get_all_varieties()

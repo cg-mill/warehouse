@@ -1,18 +1,9 @@
-import os
 import pandas as pd
-import json
 from datetime import datetime, timedelta
 from pathlib import Path
-# import xlsxwriter as xl
-# from decimal import * #TODO read docs, implement
 
-# from inventory_obj import GrainVariety,WarehouseGrainInventory
 
 ENCODING = 'utf-8'
-PREV_HIST_PATH = 'Production/Inventory/data/eom/prev_his.json'
-ALL_HIST_PATH = 'Production/Inventory/data/eom/total_history.json'
-EXCEL_SAVE_TO_PATH = Path.home().joinpath('Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
-# EXCEL_SAVE_TO_PATH = Path('TESTING FILES')
 
 
 def get_eom_date() -> datetime:
@@ -40,7 +31,7 @@ class EOMGrainVariety:
 
 
 class EOMWarehouseInventory:
-    def __init__(self, save_path:Path, data: pd.DataFrame, loss_data: pd.DataFrame, time:datetime | None = None) -> None:
+    def __init__(self, save_path:Path, data: pd.DataFrame, loss_data: pd.DataFrame, time: datetime | None = None) -> None:
         self.save_path = save_path
         self.eom_time = time
         self.data = data
@@ -50,7 +41,7 @@ class EOMWarehouseInventory:
         self.total_weight:int = self.get_total_weight()
         self.total_inv_value:float = self.get_total_value()
         self.empty_cogs:list[EOMGrainVariety] = self.get_empty_cogs()
-        self.get_var_loss()
+        # self.get_var_loss()
         self.add_org_variety_names()
         
 
@@ -65,9 +56,9 @@ class EOMWarehouseInventory:
     
 
     def choose_date_console(self):
-        dates:tuple[datetime] = self.get_eom_dates()
+        dates:tuple[str] = self.get_eom_dates()
         for i in range(len(dates)):
-            print(f'{i}: {dates[i].date()}')
+            print(f'{i}: {dates[i]}')
         answer = int(input('Please choose a number: '))
         return dates[answer]
 
@@ -135,12 +126,13 @@ class EOMWarehouseInventory:
 
 
     def get_var_loss(self) -> None:
-        for row in self.loss_data.iterrows():
-            r = row[1]
-            for var in self.all_inventory:
-                for crop in var.crop_id_list:
-                    if r['Crop ID'] == crop and (r['Date Cleaning Finished'].month, r['Date Cleaning Finished'].year) == (self.eom_time.month, self.eom_time.year):
-                        var.loss += r['Total Loss']
+        if self.eom_time:
+            for row in self.loss_data.iterrows():
+                r = row[1]
+                for var in self.all_inventory:
+                    for crop in var.crop_id_list:
+                        if r['Crop ID'] == crop and (r['Date Cleaning Finished'].month, r['Date Cleaning Finished'].year) == (self.eom_time.month, self.eom_time.year):
+                            var.loss += r['Total Loss']
     
 
     def get_total_loss(self) -> tuple[int, float]:
@@ -206,49 +198,53 @@ class EOMWarehouseInventory:
             worksheet.set_row(0, 25)
             worksheet.set_row(2, 25)
             
-            
-    def save_prev_json(self) -> None:
-        temp_dict_list = [item.__dict__ for item in self.all_inventory]
-        dict_to_save = {
-            f'{self.eom_time.date()}': temp_dict_list
-        }
-        with open(PREV_HIST_PATH, 'w', encoding=ENCODING) as file:
-            json.dump(dict_to_save, file, indent=4)
+    ##### Not Needed, Keeping for reference ######
+
+    # def save_prev_json(self) -> None:
+    #     temp_dict_list = [item.__dict__ for item in self.all_inventory]
+    #     dict_to_save = {
+    #         f'{self.eom_time.date()}': temp_dict_list
+    #     }
+    #     with open(PREV_HIST_PATH, 'w', encoding=ENCODING) as file:
+    #         json.dump(dict_to_save, file, indent=4)
 
 
-    def load_prev_json(self) -> dict:
-        history = {}
-        try:
-            with open(PREV_HIST_PATH, 'r', encoding=ENCODING) as file:
-                history = json.load(file)
-        except FileNotFoundError:
-            print('EOM Previous History File not found')
-        return history
+    # def load_prev_json(self) -> dict:
+    #     history = {}
+    #     try:
+    #         with open(PREV_HIST_PATH, 'r', encoding=ENCODING) as file:
+    #             history = json.load(file)
+    #     except FileNotFoundError:
+    #         print('EOM Previous History File not found')
+    #     return history
     
 
-    def save_to_history_json(self) -> None:
-        temp_dict_list = [item.__dict__ for item in self.all_inventory]
-        dict_to_save = {
-            f'{self.eom_time.date()}': temp_dict_list
-        }
-        self.all_history.append(dict_to_save)
-        with open(ALL_HIST_PATH, 'w', encoding=ENCODING) as file:
-            json.dump(self.all_history, file, indent=4)
+    # def save_to_history_json(self) -> None:
+    #     temp_dict_list = [item.__dict__ for item in self.all_inventory]
+    #     dict_to_save = {
+    #         f'{self.eom_time.date()}': temp_dict_list
+    #     }
+    #     self.all_history.append(dict_to_save)
+    #     with open(ALL_HIST_PATH, 'w', encoding=ENCODING) as file:
+    #         json.dump(self.all_history, file, indent=4)
 
 
-    def load_history_json(self) -> list[dict]:
-        history = []
-        try:
-            with open(ALL_HIST_PATH, 'r', encoding=ENCODING) as file:
-                history = json.load(file)
-        except FileNotFoundError:
-            print('EOM Total History File not found')
-        return history 
+    # def load_history_json(self) -> list[dict]:
+    #     history = []
+    #     try:
+    #         with open(ALL_HIST_PATH, 'r', encoding=ENCODING) as file:
+    #             history = json.load(file)
+    #     except FileNotFoundError:
+    #         print('EOM Total History File not found')
+    #     return history 
     
 
 if __name__ == "__main__":
     LOSS_LOG_PATH = Path.home().joinpath('Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
     INVENTORY_PATH = Path.home().joinpath('Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm') # FOR WORK
+
+    EXCEL_SAVE_TO_PATH = Path.home().joinpath('Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
+    # EXCEL_SAVE_TO_PATH = Path('TESTING FILES')
 
     data = pd.read_excel(
         INVENTORY_PATH.as_posix(),
@@ -277,5 +273,6 @@ if __name__ == "__main__":
 
     # eom.save_prev_json()
     # eom.save_to_history_json() 
+        eom.get_var_loss()
         eom.save_to_xlsx()
     # eom.choose_date_console()
