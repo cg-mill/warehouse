@@ -1,17 +1,13 @@
 import customtkinter as ctk
 from tkinter import messagebox
-import docx.document
-import openpyxl.styles
-import openpyxl.styles.cell_style
 import pandas as pd
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.datavalidation import DataValidation
 from pathlib import Path
-import docx
 
-from Inventory import TotalInventory, Crop, Tote, LabelMaker
+from Inventory import TotalInventory, Crop, LabelMaker
 from gui import TimeInput, MoistureProteinInput, NewVarietyWindow, NewSupplierFontInfoWindow, get_font_index_info
 
 
@@ -114,7 +110,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
         self.mat_inspet_label = ctk.CTkLabel(master=self, text='Inspection of Raw Materials,\nIngredients, Packaging')
         self.mat_inspet_label.grid(row=12, column=0, pady=5)
-        self.mat_inspect_input = ctk.CTkTextbox(master=self, width=285, height=56)
+        self.mat_inspect_input = ctk.CTkEntry(master=self, width=285)
         self.mat_inspect_input.grid(row=12, column=1, pady=5, columnspan=2)
 
         self.trailer_insp_label = ctk.CTkLabel(master=self, text='Trailer Inspection')
@@ -133,17 +129,17 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
         self.rec_notes_label = ctk.CTkLabel(master=self, text='Receiving Notes\n(Parcel ID, Totes Added Automatically)')
         self.rec_notes_label.grid(row=15, column=0, pady=5)
-        self.rec_notes_input = ctk.CTkTextbox(master=self, width=285, height=56)
+        self.rec_notes_input = ctk.CTkEntry(master=self, width=285)
         self.rec_notes_input.grid(row=15, column=1, pady=5, columnspan=2)
 
         self.inv_notes_label = ctk.CTkLabel(master=self, text='Notes for Inventory\n(Parcel ID Added Automatically)')
         self.inv_notes_label.grid(row=16, column=0, pady=5)
-        self.inv_notes_input = ctk.CTkTextbox(master=self, width=285, height=56)
+        self.inv_notes_input = ctk.CTkEntry(master=self, width=285)
         self.inv_notes_input.grid(row=16, column=1, pady=5, columnspan=2)
 
         self.corrections_label = ctk.CTkLabel(master=self, text='Corrective Actions')
         self.corrections_label.grid(row=17, column=0, pady=5)
-        self.corrections_input = ctk.CTkTextbox(master=self, width=285, height=56)
+        self.corrections_input = ctk.CTkEntry(master=self, width=285)
         self.corrections_input.grid(row=17, column=1, pady=5, columnspan=2)
 
         self.cog_label = ctk.CTkLabel(master=self, text='Cost of Goods ($/lb)')
@@ -191,7 +187,6 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
     def generate_id(self):
         ti = TotalInventory(data=self.data)
-
         while self.crop_id_input.get() != '':
             self.crop_id_input.delete(first_index=0)
 
@@ -209,10 +204,9 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
     def validate_input(self) -> bool:
         empty_input_types = ['', None]
-        not_required_empty_inputs = [] #NEEDED?
         if self.date_input.get() not in empty_input_types:
             try:
-                datetime(self.date_input.get())
+                datetime.fromisoformat(self.date_input.get())
             except TypeError:
                 messagebox.showerror(title='Invalid Date Format', message='Please Format Date Correctly')
                 return False
@@ -308,7 +302,6 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 messagebox.showerror(title='Receiving Loss', message='Receiving Loss must be a positive whole number!')
                 return False
         inputs:list[ctk.CTkEntry] = [self.children[item] for item in self.children if isinstance(self.children[item], ctk.CTkEntry)]
-        textboxes:list[ctk.CTkTextbox] = [self.children[item] for item in self.children if isinstance(self.children[item], ctk.CTkTextbox )]
         for item in inputs:
             if item == self.date_input or item == self.crop_year_input:
                 continue
@@ -356,7 +349,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         if self.date_input.get() in ['', None]:
             date_rec = self.date_input.cget('placeholder_text')
         else:
-            date_rec = datetime(self.date_input.get())
+            date_rec = datetime.fromisoformat(self.date_input.get())
         if self.crop_year_input.get() in ['', None]:
             crop_year = self.crop_year_input.cget('placeholder_text')
         else:
@@ -373,6 +366,9 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             cog = 0.0
         else:
             cog = float(self.cog_input.get())
+        total_weight = int(self.weight_input.get())
+        if self.receiving_loss_input.get() != '':
+            total_weight -= int(self.receiving_loss_input.get())
         try:
             crop = Crop(
                 grain_type=self.g_type_input.get(), 
@@ -388,7 +384,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 is_clean=self.clean_var.get(),
                 receiving_notes=self.rec_notes_input.get('0.0', 'end').strip(),
                 inventory_notes=f'{self.parcel_id_input.get()}. {self.inv_notes_input.get('0.0', 'end').strip()}',
-                total_weight=int(self.weight_input.get())
+                total_weight=total_weight
             )
             tote_count = int(self.num_totes_input.get())
             ti = TotalInventory(data=self.data)
@@ -396,7 +392,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             crop.totes = crop.create_totes(tote_nums=tote_nums)
             return crop
         except ValueError as e:
-            print(f"Error: {e}")
+            # print(f"Error: {e}")
             return None
         
 
@@ -569,8 +565,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             else:
                 print_status = ''              
             return f'✅ Make Labels Successful\nSaved to "{self.tote_label_path}"\n{print_status}'
-        except IndentationError as e:
-        # except Exception as e:
+        except Exception as e:
+            print(e)
             return f'❌ Make Labels Failed:\n{e}\n'
 
 
@@ -590,10 +586,3 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
     def handle_cancel(self):
         self.master.destroy()
-
-
-
-# if __name__=='__main__':
-#     def make_doc(tote:Tote):
-#         doc = docx.Document()
-#         print(doc.sections)

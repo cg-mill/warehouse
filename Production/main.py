@@ -1,20 +1,9 @@
-from typing import Any, Literal, Tuple
-from typing_extensions import Literal
 import customtkinter as ctk
+import tkinter as tk
 import pandas as pd
-from datetime import datetime
-from tkinter import messagebox
 from pathlib import Path
 
-from Inventory import (
-    GrainVariety, 
-    WarehouseGrainInventory,
-    Crop, 
-    TotalInventory
-)
 from gui import (
-    ReceivingWindow,
-    ReceivingFrame,
     QuickViewFrame, 
     LowStockFrame, 
     LowStockEditFrame,
@@ -29,6 +18,7 @@ from gui import (
 # EOM_SAVE_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
 TOTE_LABEL_SAVE_PATH = Path(Path().home(), 'Desktop') # temp path
 YEAR_END_LOSS_REPORT_SAVE_PATH = Path(Path().home(), 'Desktop')
+ICON_FILE = Path(Path().home(), 'Pictures/Logo.png')
 
 # Testing
 INVENTORY_PATH = Path('TESTING FILES/Warehouse Inventory.xlsm')
@@ -51,8 +41,9 @@ class App(ctk.CTk):
         
         self.geometry('900x550')
         self.title('Warehouse Operations')
-        
-        # self.grid_rowconfigure(2, weight=1)
+        # icon = tk.PhotoImage(file=ICON_FILE)
+        self.iconphoto(True, tk.PhotoImage(file=ICON_FILE))
+
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         
@@ -77,7 +68,7 @@ class App(ctk.CTk):
         self.inv_view.grid(row=0, column=1, rowspan=2, sticky='ns')
 
 
-    def set_low_stock_callback(self):
+    def set_low_stock_callback(self):#TODO make a toplevel window
         self.inv_view.destroy()
         self.inv_view = LowStockEditFrame(master=self, data=self.data, height=self._current_height, width=700)
         self.inv_view.grid(row=1, column=1, rowspan=2, sticky='ns')
@@ -93,7 +84,7 @@ class App(ctk.CTk):
     def refresh(self):
         self.data = self.get_data(path=self.inv_path)
         self.loss_data = self.get_loss_data(path=self.loss_log_path)
-        self.inv_view = self.inv_dropdown_callback(choice=self.sidebar.inv_dropdown.get())
+        self.inv_dropdown_callback(choice=self.sidebar.inv_dropdown.get())
 
 
     def get_data(self, path) -> pd.DataFrame:
@@ -103,10 +94,8 @@ class App(ctk.CTk):
             sheet_name='All',
             usecols='A:N,P,Q',
             engine='openpyxl',
-            # parse_dates=['Date Received','Clean Date','MAP Date', 'Kill Date']
             )
         data.dropna(subset=['Tote #'], inplace=True)
-        # data.fillna(value=0, axis='COGs', inplace=True)
         return data
     
 

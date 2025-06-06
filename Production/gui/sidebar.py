@@ -77,13 +77,6 @@ class HomeSideBar(ctk.CTkFrame):
         else:
             self.receiving_window.focus()
 
-
-    def open_new_variety_index_form(self): #FIXME remove?
-        if self.nv_index_window is None or not self.nv_index_window.winfo_exists():
-            self.nv_index_window = NewVarietyWindow()
-        else:
-            self.nv_index_window.focus()
-
         
     def open_eom_window(self):
         if self.eom_window is None or not self.eom_window.winfo_exists():

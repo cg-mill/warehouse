@@ -1,26 +1,17 @@
-from datetime import datetime
 import json
 import docx
-import docx.document
 from docx.enum.section import WD_ORIENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, Inches, RGBColor
-import docx.shared
-import docx.text
-from docx.text.parfmt import ParagraphFormat
-from docx.text import paragraph
-from win32 import win32print
 from win32 import win32api
 from pathlib import Path
 
-# from total_inventory import Tote #FOR TESTING
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from Inventory import Tote, TotalInventory
 
 
-# FONT_SIZE_INFO_PATH = 'Production/Inventory/data/font_info.json'
-FONT_SIZE_INFO_PATH = 'TESTING FILES/font_info.json' #FIXME remove
+FONT_SIZE_INFO_PATH = 'Production/Inventory/data/font_info.json'
 ENCODING = 'utf-8'
 
 
@@ -56,7 +47,7 @@ class LabelMaker:
         if tote.grain_type in ['Wheat', 'Buckwheat']:
             return tote.variety
         elif tote.grain_type == 'Rice':
-            return f'{tote.grain_type, tote.variety}'
+            return f'{tote.grain_type}, {tote.variety}'
         else:
             return f'{tote.variety} {tote.grain_type}'
     
@@ -110,22 +101,13 @@ class LabelMaker:
         date_par.font.name = FONT_NAME
         
         m_p_par = doc.add_paragraph()
-        tab_stops = ParagraphFormat(parent=m_p_par).tab_stops
-        tab_stops.add_tab_stop(Inches(5.5))
-        moisture_length = len(str(tote.moisture))
-        if moisture_length >= 5:#FIXME
-            tabs = 4
-        else:
-            tabs = 5
-        # elif 2 <= moisture_length < 5:
-        #     tabs = 5
-        # else:
-        #     tabs = 7
         if tote.moisture > 0.0:
-            m_p_par.add_run(f'Moisture: {tote.moisture:.2f}%')#{'\t'*tabs}
+            m_p_par.add_run(f'Moisture: {tote.moisture:.2f}%')
         else:
-            m_p_par.add_run(f'Moisture:')#{'\t'*tabs}
-        m_p_par.add_run().add_tab()#TODO
+            m_p_par.add_run(f'Moisture:')
+        m_p_par.paragraph_format.tab_stops.add_tab_stop(Inches(5.5))
+        m_p_par.add_run().add_tab()
+
         if tote.protein > 0.0:
             m_p_par.add_run(f'Protein: {tote.protein:.2f}%')
         else:
@@ -183,39 +165,3 @@ class LabelMaker:
         for file in directory_path.iterdir():
             for _ in range(2):
                 self.print_tote(file=file, directory_path=directory_path)
-
-
-if __name__ == "__main__":
-    # path = Path(Path().home(), 'Desktop/JONRYM24B')
-    # # for file in path.iterdir():
-    # #     print(file)
-
-    # for file in path.iterdir():
-    #     # for i in range(2):
-    #     win32api.ShellExecute(
-    #         0,
-    #         'print',
-    #         file.as_posix(),
-    #         None, 
-    #         path.as_posix(),
-    #         0
-    #     )
-
-
-    # tote = Tote(
-    #     variety="Butler's Gold",
-    #     grain_type='Wheat',
-    #     supplier='Martens',
-    #     tote_num=2416130,
-    #     moisture=33.22,
-    #     protein=11.00,
-    #     weight=5500,
-    #     clean_date=datetime.now().date(),
-    #     date_received=datetime.now().date(),
-    #     is_clean=False,
-    #     is_org=True
-    # )
-
-    # LabelMaker().make_label(tote=tote, path=path)
-    # print(LabelMaker().font_info['Variety'].keys())
-    pass

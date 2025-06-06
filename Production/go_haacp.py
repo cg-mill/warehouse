@@ -36,10 +36,12 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
 
 
     def login(self):
-        inputs = []
-        while inputs == []:
-            inputs = self.driver.find_elements(By.TAG_NAME, value='input')
-            time.sleep(0.5)
+        # inputs = []
+        # while inputs == []:
+        #     inputs = self.driver.find_elements(By.TAG_NAME, value='input')
+        #     time.sleep(0.5)
+        #TODO test
+        inputs = self.check_for_items(By.TAG_NAME, value='input')
         inputs[0].send_keys(self.username)
         inputs[1].send_keys(self.password)
         login_button = self.driver.find_element(By.XPATH, value='//*[@id="root"]/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div/div[1]/div[1]/div[3]/div')
@@ -61,7 +63,7 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         print(f'<Click> {button.accessible_name} timed out...')
 
 
-    def check_for_item(self, item:str) -> None:
+    def check_for_item(self, item:str) -> None:#TODO update to take by as argument
         max_iterations = 100
         for _ in range(max_iterations):
             try:
@@ -73,8 +75,14 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         print(f'check for: "{item}" timed out...')
 
 
-    def check_for_items(self):
-        pass #TODO check for list of items like in self.login
+    def check_for_items(self, by:By, value:str) -> list[WebElement]:#TODO test
+        max_iterations = 100
+        items = []
+        while items == [] and max_iterations > 0:
+            items = self.driver.find_elements(by=by, value=value)
+            time.sleep(0.5)
+            max_iterations -= 1
+        return items
 
 
     def new_report(self):
@@ -87,9 +95,7 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         self.driver.execute_script("arguments[0].scrollIntoView();", send_button)
         time.sleep(1)
         self.check_click(send_button)
-        # send_button.click()
         self.check_for_item('New Reports')
-        # time.sleep(20)
 
 
 class EODChecklist(GoHAACP):
@@ -112,23 +118,26 @@ class EODChecklist(GoHAACP):
         start = self.driver.find_element(By.XPATH, value=f'//div[contains(text(), "{log_name}")]')
         self.driver.execute_script("arguments[0].scrollIntoView();", start)
         time.sleep(1)
-        # start.click()
         self.check_click(start)
-        time.sleep(3)
-        initial_inputs = self.driver.find_elements(By.TAG_NAME, value='textarea')
-        checkboxes = self.driver.find_elements(By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
+        initial_inputs = self.check_for_items(by=By.TAG_NAME, value='textarea')
+        checkboxes = self.check_for_items(by=By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
+        # time.sleep(3)
+        # initial_inputs = self.driver.find_elements(By.TAG_NAME, value='textarea')
+        # checkboxes = self.driver.find_elements(By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
         # checkbox_iterations = [(0,3),(3,8),(8,12),(12,16),(16,16)]
         checkbox_iterations = [(1,4),(4,9),(9,13),(13,17),(17,18)]
+        if initial_inputs != [] and checkboxes != []:
+            for i in range(5):
+                initial_inputs[i].send_keys(self.initials)
+                time.sleep(0.5)
+                # for iteration in range(*checkbox_iterations[i]): # * is unpacker
+                for iteration in range(checkbox_iterations[i][0], checkbox_iterations[i][1]):
+                    checkboxes[iteration].click()    
 
-        for i in range(5):
-            initial_inputs[i].send_keys(self.initials)
-            time.sleep(0.5)
-            # for iteration in range(*checkbox_iterations[i]): # * is unpacker
-            for iteration in range(checkbox_iterations[i][0], checkbox_iterations[i][1]):
-                checkboxes[iteration].click()    
-
-        self.submit_report()
-        print('Front Checklist Complete')
+            self.submit_report()
+            print('Front Checklist Complete')
+        else:
+            print(f'Front Checklist Failed. /nInitial Inputs: {len(initial_inputs)}\nCheckboxes: {len(checkboxes)}')
 
 
     def warehouse_checklist(self):
@@ -138,7 +147,7 @@ class EODChecklist(GoHAACP):
         self.driver.execute_script("arguments[0].scrollIntoView();", start)
         time.sleep(1)
         self.check_click(start)
-        # start.click()
+        # initail_input = self.check_for_item()
         time.sleep(3)
         initail_input = self.driver.find_element(By.TAG_NAME, value='textarea')
         checkboxes = self.driver.find_elements(By.CSS_SELECTOR, value='[style="margin-left: 10px; margin-right: 5px; width: 22px; height: 22px; border-style: solid; border-color: rgb(244, 152, 30); border-width: 1px; border-radius: 4px;"]')
