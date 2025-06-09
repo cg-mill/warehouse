@@ -3,7 +3,7 @@ from tkinter import messagebox
 import pandas as pd
 from datetime import datetime
 import openpyxl
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, Font
 from openpyxl.worksheet.datavalidation import DataValidation
 from pathlib import Path
 
@@ -229,6 +229,9 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         if self.supplier_input.get() not in LabelMaker().font_info['Supplier'].keys():
             if messagebox.askokcancel(title='New Supplier', message=f'Font Info not found for {self.supplier_input.get()}\nAssign font info now?'):
                 ns_window = NewSupplierFontInfoWindow(supplier_name=self.supplier_input.get())
+                return False
+            else:
+                return False
         if self.g_type_input.get() in empty_input_types:
             messagebox.showerror(title='No Grain Type', message='Please enter a grain type. e.g. "Wheat", "Rye", etc...')
             return False
@@ -298,7 +301,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 if rec_loss < 0:
                     messagebox.showerror(title='Receiving Loss', message='Receiving Loss must be a positive number!')
                     return False
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError):
                 messagebox.showerror(title='Receiving Loss', message='Receiving Loss must be a positive whole number!')
                 return False
         inputs:list[ctk.CTkEntry] = [self.children[item] for item in self.children if isinstance(self.children[item], ctk.CTkEntry)]
@@ -382,8 +385,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 cog=cog,
                 is_org=self.org_var.get(),
                 is_clean=self.clean_var.get(),
-                receiving_notes=self.rec_notes_input.get('0.0', 'end').strip(),
-                inventory_notes=f'{self.parcel_id_input.get()}. {self.inv_notes_input.get('0.0', 'end').strip()}',
+                receiving_notes=self.rec_notes_input.get(),
+                inventory_notes=f'{self.parcel_id_input.get()}. {self.inv_notes_input.get()}',
                 total_weight=total_weight
             )
             tote_count = int(self.num_totes_input.get())
@@ -416,26 +419,29 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 notes_to_write += f' Lost {self.receiving_loss_input.get()} to receiving.'
             wb = openpyxl.load_workbook(self.receiving_path)
             ws = wb.active
-            for row in range(1, ws.max_row):
+            row_to_write = None
+            for row in range(1, ws.max_row+1):
                 if ws.cell(row, 1).value == None:
                     row_to_write = row
                     break
+            if row_to_write == None:
+                row_to_write = ws.max_row+1
             data = {
                 1: f'{crop.grain_type}, {crop.variety}',
                 2: date_to_write,
                 3: crop.supplier,
                 4: crop.crop_id,
                 5: org_to_write,
-                6: crop.total_weight,
+                6: self.weight_input.get(),
                 7: self.doc_input.get(),
-                8: self.mat_inspect_input.get('0.0', 'end').strip(),
+                8: self.mat_inspect_input.get(),
                 9: self.trailer_insp_input.get(),
                 10: notes_to_write,
                 11: self.received_by_input.get(),
                 12: myco_to_write,
                 13: crop.moisture,
                 14: crop.protein,
-                15: self.corrections_input.get('0.0', 'end').strip()
+                15: self.corrections_input.get()
             }
             if crop.variety == 'Buckwheat':
                 data[1] = 'Buckwheat'
@@ -454,20 +460,24 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             return f'❌ Write to Receiving Failed \n{e}\n'
 
 
-    def write_to_loss_log(self, crop:Crop) -> str:
+    def write_to_loss_log(self, crop:Crop) -> str:#FIXME losses formatting
         try:
-            wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)
+            wb = openpyxl.load_workbook(self.loss_log_path)#, keep_vba=True)
             ws = wb['Receiving - Cleaning']
             grain_dv = DataValidation(type='list', formula1='"Wheat, Rye, Corn, Rice, Beans, Buckwheat"')
             ws.add_data_validation(grain_dv)
             org_dv = DataValidation(type='list', formula1='"ORGANIC, NOT ORGANIC"')
             ws.add_data_validation(org_dv)
-            for row in range(1, ws.max_row):
+            row_to_write = None
+            for row in range(1, ws.max_row+1):
                 if ws.cell(row, 2).value == None:
                     row_to_write = row
                     break
+            if row_to_write == None:
+                row_to_write = ws.max_row+1
             grain_dv.add(f'A2:A{row_to_write}')
             org_dv.add(f'F2:F{row_to_write}')
+            date_to_write = f'{crop.date_received.month}/{crop.date_received.day}/{crop.date_received.year}'
             if crop.is_org:
                 org_status = 'ORGANIC'
             else:
@@ -476,19 +486,27 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 1: crop.grain_type,
                 2: crop.variety,
                 3: crop.crop_id,
-                4: crop.date_received.strftime("%m%d%Y"),
+                4: date_to_write,
                 5: crop.supplier,
                 6: org_status,
-                7: crop.total_weight,
+                7: crop.total_weight + int(self.receiving_loss_input.get()),
                 9: self.receiving_loss_input.get()
             }
             if crop.is_clean:
                 crop_data.update({
-                    8: crop.date_received.strftime("%m%d%Y"),
+                    8: date_to_write,
                     10: 0,
-                    11: crop.total_weight - int(self.receiving_loss_input.get()),
+                    11: crop.total_weight,
                     14: 0
                 })
+            for key, value in crop_data.items():
+                cell = ws.cell(row=row_to_write, column=key)
+                cell.value = value
+                cell.font = Font(name='Aptos Narrow', size=10)
+                if key in [4, 7, 8, 9, 10, 11, 14]:
+                    cell.alignment = Alignment(horizontal='right')
+                if key in [5, 6]:
+                    cell.alignment = Alignment(horizontal='center')
             wb.save(self.loss_log_path)
             wb.close()
             return '✅ Write to Loss Log Successful\n'
@@ -502,10 +520,13 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             ws = wb['All']
             dv = DataValidation(type='list', formula1='"In Facility, Working, Seed Stock, Killed"')
             ws.add_data_validation(dv)
-            for row in range(1, ws.max_row):
+            row_to_write = None
+            for row in range(1, ws.max_row+1):
                 if ws.cell(row, 2).value == None:
                     row_to_write = row
                     break
+            if row_to_write == None:
+                row_to_write = ws.max_row+1
             dv.add(f'A2:A{row_to_write + len(crop.totes)}')
             org_status = 'ORGANIC'
             if not crop.is_org:
@@ -516,6 +537,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             clean_status = ''
             if crop.is_clean:
                 clean_status = 'Clean'
+            date_to_write = f'{crop.date_received.month}/{crop.date_received.day}/{crop.date_received.year}'
             for tote in crop.totes:
                 tote_data = {
                     1: 'In Facility',
@@ -524,7 +546,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                     4: org_status,
                     5: tote.write_type_var(),
                     6: tote.supplier,
-                    7: tote.date_received,
+                    # 7: tote.date_received.strftime('%m/%d/%Y'),
+                    7: date_to_write,
                     8: tote.protein/100,
                     9: tote.moisture/100,
                     10: cog,

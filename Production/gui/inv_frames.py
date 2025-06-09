@@ -8,8 +8,8 @@ from datetime import datetime
 from Inventory import GrainVariety, WarehouseGrainInventory, EOMWarehouseInventory
 
 
-INDEX_FILEPATH = Path('Production/Inventory/data/variety_index.json')
-FONT_INFO_PATH = Path('Production/Inventory/data/font_info.json')
+# INDEX_FILEPATH = Path('Production/Inventory/data/variety_index.json')
+# FONT_INFO_PATH = Path('Production/Inventory/data/font_info.json')
 LOW_STOCK_INFO_PATH = Path('Production/Inventory/data/ls.json')
 ENCODING = 'utf-8'
 
