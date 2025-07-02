@@ -415,7 +415,11 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             else: 
                 myco_to_write = 'UNSAFE LEVELS'
             notes_to_write = f'{self.parcel_id_input.get()}. {len(crop.totes)} x {crop.totes[0].weight}lbs totes. {crop.receiving_notes}.'
-            if int(self.receiving_loss_input.get()) > 0:
+            if self.receiving_loss_input.get() == '':
+                rec_loss = 0
+            else:
+                rec_loss = int(self.receiving_loss_input.get())
+            if rec_loss > 0:
                 notes_to_write += f' Lost {self.receiving_loss_input.get()} to receiving.'
             wb = openpyxl.load_workbook(self.receiving_path)
             ws = wb.active
@@ -425,7 +429,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                     row_to_write = row
                     break
             if row_to_write == None:
-                row_to_write = ws.max_row+1
+                row_to_write = ws.max_row + 1
             data = {
                 1: f'{crop.grain_type}, {crop.variety}',
                 2: date_to_write,
@@ -482,6 +486,10 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 org_status = 'ORGANIC'
             else:
                 org_status = 'NOT ORGANIC'
+            if self.receiving_loss_input.get() == '':
+                rec_loss = 0
+            else:
+                rec_loss = int(self.receiving_loss_input.get())
             crop_data = {
                 1: crop.grain_type,
                 2: crop.variety,
@@ -489,8 +497,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                 4: date_to_write,
                 5: crop.supplier,
                 6: org_status,
-                7: crop.total_weight + int(self.receiving_loss_input.get()),
-                9: self.receiving_loss_input.get()
+                7: crop.total_weight + rec_loss,
+                9: rec_loss
             }
             if crop.is_clean:
                 crop_data.update({
@@ -600,7 +608,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             return f'❌ Make Document Directory Failed \n{e}\n'
         base_path = Path(Path().home(), 'Team BSM Dropbox/Food Safety/Receiving/Receiving Documents')
         try:
-            full_path = base_path.joinpath(base_path, str(crop.date_received.year), 'Grain & Legumes', crop.supplier, crop.variety, str(crop.date_received))
+            full_path = base_path.joinpath(base_path, str(crop.date_received.year), 'Grain & Legumes', crop.supplier, crop.variety, str(crop.date_received.date()))
             full_path.mkdir(parents=True, exist_ok=True)
             return '✅ Create Document Directory Successful'
         except Exception as e:
