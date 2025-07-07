@@ -479,8 +479,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
                     break
             if row_to_write == None:
                 row_to_write = ws.max_row+1
-            grain_dv.add(f'A2:A{row_to_write}')
-            org_dv.add(f'F2:F{row_to_write}')
+            grain_dv.add(f'A2:A{row_to_write}') #TODO update to further down the column
+            org_dv.add(f'F2:F{row_to_write}') #TODO add data validation to retail loss
             date_to_write = f'{crop.date_received.month}/{crop.date_received.day}/{crop.date_received.year}'
             if crop.is_org:
                 org_status = 'ORGANIC'

@@ -150,7 +150,7 @@ class LabelMaker:
         doc.save(f'{path}/{tote.tote_num}.docx')
 
 
-    def print_tote(self, file: Path, directory_path: Path):
+    def print_tote(self, file: Path, directory_path: Path):#FIXME rework? get rid of popups, out of order
         win32api.ShellExecute(
             0,
             'print',
