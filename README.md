@@ -17,4 +17,4 @@
 
 # Quarterly Tasks
 
-## CO~2~ Checking
+## CO<sub>2</sub> Checking
