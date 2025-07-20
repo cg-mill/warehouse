@@ -58,6 +58,8 @@ class LabelMaker:
         SM_FONT = Pt(37)
         ORG_FONT_SIZE = Pt(78)
         NOT_ORG_FONT_SIZE = Pt(70)
+        WHEAT_FOOTER_FONT_SIZE = Pt(30)
+        NON_WHEAT_FOOTER_FONT_SIZE = Pt(26)
         LG_LINE_SPACING = 0.88
         SM_LINE_SPACING = 0.76
 
@@ -69,15 +71,21 @@ class LabelMaker:
         section.orientation = WD_ORIENT.LANDSCAPE
         section.page_height = width
         section.page_width = height
-        section.top_margin = Inches(0.6)
+        section.top_margin = Inches(0.2)
         section.left_margin = Inches(0.7)
-        section.right_margin = Inches(0.3)
-        section.bottom_margin = Inches(0.5)
+        section.right_margin = Inches(0.1)
+        section.bottom_margin = Inches(0.2)
         
-        
-        tote_num_par = doc.add_paragraph().add_run(f'Tote # {tote.tote_num}')
-        tote_num_par.font.size = LG_FONT
-        tote_num_par.font.name = FONT_NAME
+        tote_num_par = doc.add_paragraph()
+        tote_num_run = tote_num_par.add_run(f'Tote # {tote.tote_num}')
+        if tote.is_org:
+            tote_num_par.paragraph_format.tab_stops.add_tab_stop(Inches(8.5))
+            tote_num_par.add_run().add_tab()
+            logo = tote_num_par.add_run()#.add_picture('Production/Inventory/img//ccof_logo.jpeg', width=Inches(1.25))
+            logo.font.size = Pt(150)
+            logo.add_picture('Production/Inventory/img//ccof_logo.jpeg', width=Inches(1.26))
+        tote_num_run.font.size = LG_FONT
+        tote_num_run.font.name = FONT_NAME
 
         var_par = doc.add_paragraph()
         var_label = var_par.add_run('Variety: ')
@@ -129,20 +137,37 @@ class LabelMaker:
         map_co2_par.font.size = SM_FONT
         map_co2_par.font.name = FONT_NAME
 
-        org_par = doc.add_paragraph()
-        org_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        if tote.is_org:
-            org_par.add_run('CERTIFIED ORGANIC')
-            org_par.runs[0].font.size = ORG_FONT_SIZE
-            org_par.runs[0].font.color.rgb = RGBColor(0, 160, 56)
+        footer = doc.sections[-1].footer
+        footer_p = footer.add_paragraph()
+        footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        footer_p.paragraph_format.line_spacing = SM_LINE_SPACING
+        if tote.grain_type == 'Wheat':
+            run = footer_p.add_run('CONTAINS: Wheat')
+            run.font.size = WHEAT_FOOTER_FONT_SIZE
+        elif not tote.is_clean:
+            run = footer_p.add_run('ALLERGEN ADVISORY: Manufactured on shared equipment with wheat.')
+            run.font.size = NON_WHEAT_FOOTER_FONT_SIZE
         else:
-            org_par.add_run('NOT CERTIFIED ORGANIC')
-            org_par.runs[0].font.size = NOT_ORG_FONT_SIZE
-            org_par.runs[0].font.color.rgb = RGBColor(255, 75, 75)
-        org_par.runs[0].font.name = FONT_NAME
+            run = footer_p.add_run()
+        run.font.color.rgb = RGBColor(238, 0, 0)
+
+        #### FORMER ORGANIC LABELS ####
+        # org_par = doc.add_paragraph()
+        # org_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # if tote.is_org:
+        #     org_par.add_run('CERTIFIED ORGANIC')
+        #     org_par.runs[0].font.size = ORG_FONT_SIZE
+        #     org_par.runs[0].font.color.rgb = RGBColor(0, 160, 56)
+        # else:
+        #     org_par.add_run('NOT CERTIFIED ORGANIC')
+        #     org_par.runs[0].font.size = NOT_ORG_FONT_SIZE
+        #     org_par.runs[0].font.color.rgb = RGBColor(255, 75, 75)
+        # org_par.runs[0].font.name = FONT_NAME
 
         for i in range(len(doc.paragraphs)):
-            if i in [0, 1, 2, len(doc.paragraphs) - 1]:
+            if i == 0:
+                doc.paragraphs[i].paragraph_format.line_spacing = 1
+            elif i in [1, 2, len(doc.paragraphs) - 1]:
                 doc.paragraphs[i].paragraph_format.line_spacing = LG_LINE_SPACING
             else:
                 doc.paragraphs[i].paragraph_format.line_spacing = SM_LINE_SPACING
@@ -165,3 +190,35 @@ class LabelMaker:
         for file in directory_path.iterdir():
             for _ in range(2):
                 self.print_tote(file=file, directory_path=directory_path)
+
+
+# if __name__ == "__main__":
+#     from total_inventory import Tote
+#     from datetime import datetime
+
+#     lm = LabelMaker()
+#     tote = Tote(
+#         # variety="Butler's Gold",
+#         # grain_type='Wheat',
+#         # supplier='4 Generations',
+#         # crop_id='4GEBUT25',
+#         # tote_num=2516067,
+#         # moisture=12.99,
+#         # protein=13.99,
+#         # weight=2501,
+#         # is_org=True
+
+#         variety='Ryman',
+#         grain_type='Rye',
+#         supplier='TYR Food Products',
+#         crop_id='RYMTYR35',
+#         tote_num=2532045,
+#         moisture=11.33,
+#         protein=33.33,
+#         weight=2505,
+#         is_org=True,
+#         # is_clean=True
+#         # is_org=False,
+#         is_clean=False
+#         )
+#     lm.make_label(tote, path=Path.home().joinpath('Desktop'))
