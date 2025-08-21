@@ -1,9 +1,10 @@
 import pandas as pd
 import json
 from datetime import datetime
+from pathlib import Path
 
 
-LOW_STOCK_INFO_PATH = 'Production/Inventory/data/ls.json'
+LOW_STOCK_INFO_PATH = Path.joinpath(Path.cwd(), 'Production/Inventory/data/ls.json')
 PREVIOUS_INV_INFO = 'Production/Inventory/data/prev_his.json'
 INVENTORY_HISTORY_PATH = 'Production/Inventory/data/inv_his.json' 
 ENCODING = 'utf-8'

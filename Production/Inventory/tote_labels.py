@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from Inventory import Tote, TotalInventory
 
 
-FONT_SIZE_INFO_PATH = 'Production/Inventory/data/font_info.json'
+FONT_SIZE_INFO_PATH = Path.joinpath(Path.cwd(),'Production/Inventory/data/font_info.json')
 ENCODING = 'utf-8'
 
 

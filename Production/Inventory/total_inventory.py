@@ -1,10 +1,10 @@
 import pandas as pd
 from datetime import datetime, date
 import json
-import os
+from pathlib import Path
 
 
-INDEX_FILEPATH = 'Production/Inventory/data/variety_index.json'
+INDEX_FILEPATH = Path.joinpath(Path.cwd(), 'Production/Inventory/data/variety_index.json')
 ENCODING = 'utf-8'
 
 
