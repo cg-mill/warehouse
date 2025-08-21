@@ -6,6 +6,8 @@ prev_his.json
 temp/
 TESTING FILES/
 gohaccp.json
+update_labels.py
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

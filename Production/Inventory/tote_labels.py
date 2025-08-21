@@ -141,7 +141,7 @@ class LabelMaker:
         footer_p = footer.add_paragraph()
         footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         footer_p.paragraph_format.line_spacing = SM_LINE_SPACING
-        if tote.grain_type == 'Wheat':
+        if tote.grain_type in ['Wheat', 'Einkorn', 'Emmer', 'Spelt']:
             run = footer_p.add_run('CONTAINS: Wheat')
             run.font.size = WHEAT_FOOTER_FONT_SIZE
         elif not tote.is_clean:

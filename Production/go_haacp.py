@@ -20,7 +20,7 @@ with open('Production/gohaccp.json') as f:
 URL = login_data['url']
 USERNAME = login_data['username']
 PASSWORD = login_data['password']
-INITIALS = 'CG'
+INITIALS = login_data['initials']
 
 
 class GoHAACP: #TODO loop try to click elements, then wait if not found
@@ -44,7 +44,7 @@ class GoHAACP: #TODO loop try to click elements, then wait if not found
         inputs = self.check_for_items(By.TAG_NAME, value='input')
         inputs[0].send_keys(self.username)
         inputs[1].send_keys(self.password)
-        login_button = self.driver.find_element(By.XPATH, value='//*[@id="root"]/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div/div[1]/div[1]/div[3]/div')
+        login_button = self.driver.find_element(By.XPATH, value='//div[contains(text(), "Login")]')
         self.check_click(login_button)
         # login_button.click()
         # time.sleep(5) #FIXME delete sleeps if 

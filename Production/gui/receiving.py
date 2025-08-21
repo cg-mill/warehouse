@@ -40,6 +40,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.receiving_path = receiving_path
         self.tote_label_path = tote_label_path
         self.loss_log_path = loss_log_path
+        # self.ignore_suppliers = ['VanDerHart Farms', 'VanDerHart', 'Martens, Coleman', 'TYR Food Products, Martens', 'Hoelscher, Enger', 'Coleman, Enger', 'Stengel Grain (Robert Joos)', 'Jones Farms (Peak Farms LLC)']
+
 
         self.date_label = ctk.CTkLabel(master=self, text='Date Received (yyyy-mm-dd)', justify='right', anchor='e')
         self.date_label.grid(row=0, column=0, padx=10, pady=5)
@@ -60,6 +62,11 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.supplier_label.grid(row=3, column=0, pady=5)
         self.supplier_input = ctk.CTkEntry(master=self, placeholder_text='Supplier')
         self.supplier_input.grid(row=3, column=1, pady=5)
+        # self.supplier_input = ctk.CTkOptionMenu(master=self, values=[item for item in get_font_index_info()[0]['Supplier'].keys() if item not in self.ignore_suppliers])
+        # self.add_supplier_button = ctk.CTkButton(master=self, width=20, text='+', command=self.add_supplier)
+        # self.add_supplier_button.grid(row=3, column=2, pady=5)
+        # self.refresh_supplier_list_button = ctk.CTkButton(master=self, width=30, text='Refresh Supplier List', command=self.refresh_supplier_list)
+        # self.refresh_supplier_list_button.grid(row=3, column=3, pady=5)
 
         self.grain_type_label = ctk.CTkLabel(master=self, text='Grain Type', justify='right', anchor='e')
         self.grain_type_label.grid(row=4, column=0, pady=5)
@@ -174,8 +181,8 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         self.to_loss_log_check.grid(row=24, column=0, pady=5, sticky='W')
         self.make_labels_check = ctk.CTkCheckBox(master=self, text='Make Tote Labels')
         self.make_labels_check.grid(row=25, column=0, pady=5, sticky='W')
-        self.print_labels_check = ctk.CTkCheckBox(master=self, text='Print Tote Labels')
-        self.print_labels_check.grid(row=26, column=0, pady=5, sticky='W')
+        # self.print_labels_check = ctk.CTkCheckBox(master=self, text='Print Tote Labels')
+        # self.print_labels_check.grid(row=26, column=0, pady=5, sticky='W')
         self.doc_directory_check = ctk.CTkCheckBox(master=self, text='Make Directory for Receiving Documents')
         self.doc_directory_check.grid(row=27, column=0, pady=5, sticky='W')
 
@@ -325,10 +332,10 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
         if bool(self.to_loss_log_check.get()):
             status += f'{self.write_to_loss_log(crop=crop)}'
         if bool(self.make_labels_check.get()):
-            if bool(self.print_labels_check.get()):
-                status += f'{self.make_tote_labels(crop=crop, to_print=True)}\n'
-            else:
-                status += f'{self.make_tote_labels(crop=crop)}'
+            # if bool(self.print_labels_check.get()):
+            #     status += f'{self.make_tote_labels(crop=crop, to_print=True)}\n'
+            # else:
+            status += f'{self.make_tote_labels(crop=crop)}'
         if bool(self.doc_directory_check.get()):
             status += f'{self.make_doc_directory()}\n'
         return status
@@ -346,6 +353,14 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
             else: 
                 messagebox.showerror(title='Aborted', message='Submit aborted due to improper formatting.')
                 return
+            
+
+    # def add_supplier(self):
+    #     ns = NewSupplierFontInfoWindow(supplier_name='')
+
+    
+    # def refresh_supplier_list(self):
+    #     self.supplier_input.config(values=[item for item in get_font_index_info()[0]['Supplier'].keys() if item not in self.ignore_suppliers])
 
 
     def make_crop(self) -> Crop | None:
@@ -466,7 +481,7 @@ class ReceivingFrame(ctk.CTkScrollableFrame):#FIXME scroll bar not scrolling
 
     def write_to_loss_log(self, crop:Crop) -> str:#FIXME losses formatting
         try:
-            wb = openpyxl.load_workbook(self.loss_log_path)#, keep_vba=True)
+            wb = openpyxl.load_workbook(self.loss_log_path, keep_vba=True)
             ws = wb['Receiving - Cleaning']
             grain_dv = DataValidation(type='list', formula1='"Wheat, Rye, Corn, Rice, Beans, Buckwheat"')
             ws.add_data_validation(grain_dv)

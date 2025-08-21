@@ -36,9 +36,12 @@
         "Frisco (STILL AUSTIN)": 0,
         "Fuller (STILL AUSTIN)": 0,
         "Knox (STILL AUSTIN)": 0,
+        "Long Grain Brown": 50,
+        "Long Grain White": 50,
         "Marquis": 72,
         "Mediterranean": 72,
         "Mediterranean (STILL AUSTIN)": 0,
+        "Oberkulmer": 72,
         "Purple": 72,
         "Purple Straw": 72,
         "Purple Straw (STILL AUSTIN)": 0,
@@ -109,6 +112,7 @@
         "Stevens": 72,
         "Jones Farms (Peak Farms LLC)": 72,
         "Jones Farms": 72,
-        "Dry Storage Mill": 72
+        "Dry Storage Mill": 72,
+        "Wolf Farms": 72
     }
 }

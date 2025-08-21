@@ -88,6 +88,8 @@ class EOMWarehouseInventory:
             r = row[1]
             if r['Inventory Status'] != 'Killed':
                 org_status = True
+                if pd.isnull(r['COGs']):
+                    r['COGs'] = 0
                 if r['Organic Status'] != 'ORGANIC':
                     org_status = False
                 for var in varieties:
