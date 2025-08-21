@@ -8,6 +8,7 @@
   - Open VS Code, and click "Extensions".
   - Search for "Python"
   - Install the python extension
+  - The first couple minutes of [this](https://www.youtube.com/watch?v=D2cwvpJSBX4) tutorial can help.
 - ### Download the zip file from the `Code` section of this page
 - ### Unzip the file
 - ### Open the extracted folder in VS Code
