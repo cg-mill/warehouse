@@ -12,19 +12,19 @@ from gui import (
 
 
 # Production
-# INVENTORY_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm')
-# RECEIVING_PATH = Path(Path().home(), 'Team BSM Dropbox/Food Safety/Receiving/The Receiving Log - 2022 to Current.xlsx')
-# LOSS_LOG_PATH = Path(Path().home(), 'Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
-# EOM_SAVE_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
+INVENTORY_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/Warehouse Inventory.xlsm')
+RECEIVING_PATH = Path(Path().home(), 'Team BSM Dropbox/Food Safety/Receiving/The Receiving Log - 2022 to Current.xlsx')
+LOSS_LOG_PATH = Path(Path().home(), 'Team BSM Dropbox/Food Safety/LOGS/Waste Log.xlsx')
+EOM_SAVE_PATH = Path(Path().home(), 'Team BSM Dropbox/Warehouse/EOM Inventory Totals + COGs')
 TOTE_LABEL_SAVE_PATH = Path(Path().home(), 'Desktop') # temp path
 YEAR_END_LOSS_REPORT_SAVE_PATH = Path(Path().home(), 'Desktop')
 ICON_FILE = Path(Path().home(), 'Pictures/Logo.png')
 
 # Testing
-INVENTORY_PATH = Path('TESTING FILES/Warehouse Inventory.xlsm')
-RECEIVING_PATH = Path('TESTING FILES/The Receiving Log - 2022 to Current.xlsx')
-LOSS_LOG_PATH = Path('TESTING FILES/Waste Log.xlsx')
-EOM_SAVE_PATH = Path('TESTING FILES')
+# INVENTORY_PATH = Path('TESTING FILES/Warehouse Inventory.xlsm')
+# RECEIVING_PATH = Path('TESTING FILES/The Receiving Log - 2022 to Current.xlsx')
+# LOSS_LOG_PATH = Path('TESTING FILES/Waste Log.xlsx')
+# EOM_SAVE_PATH = Path('TESTING FILES')
 
 
 class App(ctk.CTk):
