@@ -1,7 +1,0 @@
-GUI *********
-receiving automation / form filling
-
-    make button for generating eom inventory
-
-generate end of year report for seed cleaning/receiving loss. 
-
