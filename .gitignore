@@ -9,6 +9,7 @@ gohaccp.json
 go_haacp.py
 update_labels.py
 .vscode
+todo.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -180,4 +181,4 @@ cython_debug/
 #.idea/
 
 # PyPI configuration file
-.pypirc
+.pypircProduction/go_haacp.py
